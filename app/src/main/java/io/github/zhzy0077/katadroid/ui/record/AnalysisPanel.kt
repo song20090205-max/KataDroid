@@ -42,6 +42,9 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
     val position = state.position
     val analysis = engine.analysisFor(position)
     val preview = state.preview
+    val playedNode = state.node.takeIf { it.color in 1..2 && it.parentId != null }
+    val previousAnalysis = playedNode?.parentId?.let { engine.analysisFor(state.positionFor(it)) }
+    val playedMove = playedNode?.point?.index ?: if (playedNode != null) PASS else null
     val phase = if (!enabled) EnginePhase.OFF else if (engine.positionKey == position.key) engine.phase else EnginePhase.STARTING
     val previewCount = if (preview != null) state.previewStep else 0
     val chartRoute = if (preview == null) state.route else state.path(state.selectedId)
@@ -96,6 +99,7 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
                 WinRateChart(samples, position.moves.size, state::seekToNode, Modifier.fillMaxSize())
             }
             if (preview == null) {
+                MoveExplanation(state, analysis, previousAnalysis, playedNode?.color, playedMove)
                 val pass = analysis?.candidates?.firstOrNull { it.move == PASS }
                 if (showCandidates && pass != null) TextButton(onClick = { state.startPreview(Candidate(pass.label, pass.pv)) },
                     modifier = Modifier.testTag("candidate-pass")) { Text(resources.getString(R.string.pass_preview, pass.label), fontSize = 10.sp) }
@@ -116,6 +120,62 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)) { Text(resources.getString(R.string.exit_preview), fontSize = 10.sp) }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MoveExplanation(
+    state: RecordUiState,
+    current: io.github.zhzy0077.katadroid.engine.PositionAnalysis?,
+    previous: io.github.zhzy0077.katadroid.engine.PositionAnalysis?,
+    playedColor: Int?,
+    playedMove: Int?,
+) {
+    val resources = LocalResources.current
+    val best = (previous ?: current)?.candidates?.firstOrNull()
+    val second = (previous ?: current)?.candidates?.getOrNull(1)
+    val playedLabel = playedMove?.let { BoardPoint.fromIndex(it)?.label ?: resources.getString(R.string.pass_move) }
+    val explanation = when {
+        playedColor != null && (previous == null || current == null) ->
+            resources.getString(R.string.analysis_explain_waiting)
+        playedColor != null && best != null && playedMove != null -> {
+            val expected = best.winRateFor(playedColor)
+            val actual = current!!.let { it.winRateFor(playedColor) }
+            val loss = expected - actual
+            when {
+                loss >= 7f -> resources.getString(R.string.analysis_explain_blunder, playedLabel ?: "", loss.oneDecimal())
+                loss >= 2.5f -> resources.getString(R.string.analysis_explain_mistake, playedLabel ?: "", loss.oneDecimal())
+                loss >= -1f -> resources.getString(R.string.analysis_explain_good, playedLabel ?: "", abs(loss).oneDecimal())
+                else -> resources.getString(R.string.analysis_explain_better, playedLabel ?: "", abs(loss).oneDecimal())
+            }
+        }
+        best != null -> {
+            val label = BoardPoint.fromIndex(best.move)?.label ?: resources.getString(R.string.pass_move)
+            val gap = second?.let { (best.winRateFor(if (current?.position?.nextPlayer == 2) 2 else 1) - it.winRateFor(if (current?.position?.nextPlayer == 2) 2 else 1)).coerceAtLeast(0f) }
+            if (gap != null) resources.getString(R.string.analysis_explain_current, label, (previous ?: current)!!.visits, gap.oneDecimal())
+            else resources.getString(R.string.analysis_explain_best, label, (previous ?: current)!!.visits)
+        }
+        else -> resources.getString(R.string.analysis_explain_waiting)
+    }
+    val previewCandidate = if (playedColor == null) best else null
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(top = 5.dp).testTag("move-explanation"),
+        shape = RoundedCornerShape(12.dp),
+        color = GoColors.Container,
+    ) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(resources.getString(R.string.analysis_explain_title), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = GoColors.Primary)
+                if (previewCandidate != null) {
+                    TextButton(onClick = { state.startPreview(Candidate(previewCandidate.label, previewCandidate.pv)) },
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 5.dp, vertical = 0.dp),
+                        modifier = Modifier.heightIn(min = 28.dp).testTag("explain-preview")) {
+                        Text(resources.getString(R.string.analysis_explain_preview), fontSize = 10.sp)
+                    }
+                }
+            }
+            Text(explanation, fontSize = 10.sp, lineHeight = 15.sp, color = GoColors.Ink)
         }
     }
 }
