@@ -4,6 +4,11 @@
     <string name="back">Back</string>
     <string name="settings">Settings</string>
     <string name="cancel">Cancel</string>
+    <string name="compute_profile">Compute mode</string>
+    <string name="profile_power_saving">Power saving</string>
+    <string name="profile_balanced">Balanced</string>
+    <string name="profile_high_performance">High performance</string>
+    <string name="compute_profile_hint">Power saving: b6c96, 500 visits, 1 thread. Balanced: b6c96, 2,000 visits, 2 threads. High performance: b10c128, 5,000 visits, 4 threads. High performance reduces sustained workload when the phone is warm or battery saver is active.</string>
     <string name="search_automation">Search &amp; automatic moves</string>
     <string name="search_limit">Search budget</string>
     <string name="auto_black">Play Black automatically</string>
