@@ -234,4 +234,8 @@
     <string name="model_import_complete">Imported %1$s. Select it above to use it.</string>
     <string name="model_import_failed">Model import failed. Check the package version, checksums and CPU references.</string>
     <string name="model_import_hint">Import a .kdmodel ZIP containing a portable graph, matching KataGo descriptor and numerical references. Bundled models remain available.</string>
+    <string name="visits_count">%1$d visits</string>
+    <string name="benchmark_progress">%1$s · %2$d / %3$d visits</string>
+    <string name="benchmark_rate">%1$s visits/s</string>
+    <string name="benchmark_sample_rate">%1$s visits/s</string>
 </resources>
