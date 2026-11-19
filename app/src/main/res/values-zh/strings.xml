@@ -4,6 +4,11 @@
     <string name="back">返回</string>
     <string name="settings">设置</string>
     <string name="cancel">取消</string>
+    <string name="compute_profile">運算模式</string>
+    <string name="profile_power_saving">省電</string>
+    <string name="profile_balanced">平衡</string>
+    <string name="profile_high_performance">高算力</string>
+    <string name="compute_profile_hint">省電：b6c96、500 次搜尋、1 執行緒；平衡：b6c96、2000 次、2 執行緒；高算力：b10c128、5000 次、4 執行緒。高算力會依手機溫度與省電狀態降低持續運算負載。</string>
     <string name="search_automation">搜索与自动落子</string>
     <string name="search_limit">搜索预算</string>
     <string name="auto_black">黑棋自动落子</string>
