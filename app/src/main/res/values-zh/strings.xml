@@ -238,4 +238,14 @@
     <string name="benchmark_progress">%1$s · %2$d / %3$d 次搜索</string>
     <string name="benchmark_rate">%1$s 次搜索／秒</string>
     <string name="benchmark_sample_rate">%1$s 次搜索／秒</string>
+
+    <string name="analysis_explain_title">AI 棋步解析</string>
+    <string name="analysis_explain_waiting">正在補齊這手棋前後的分析資料，完成後就能評估這手棋。</string>
+    <string name="analysis_explain_best">目前首選：%1$s（搜尋 %2$d 次）。這是本次搜尋排名第一的落點。</string>
+    <string name="analysis_explain_current">AI 首選：%1$s（搜尋 %2$d 次）。預估勝率比第二候選點高 %3$s 個百分點。</string>
+    <string name="analysis_explain_good">你下的 %1$s 與 AI 原先首選接近，預估差距約 %2$s 個勝率百分點。</string>
+    <string name="analysis_explain_mistake">你下的 %1$s 與 AI 原先首選相比，預估損失約 %2$s 個勝率百分點。</string>
+    <string name="analysis_explain_blunder">你下的 %1$s 與 AI 原先首選相比，預估損失約 %2$s 個勝率百分點，局面評估下降明顯。</string>
+    <string name="analysis_explain_better">你下的 %1$s 目前評估比 AI 原先首選高約 %2$s 個勝率百分點。由於搜尋結果可能波動，建議提高搜尋次數確認。</string>
+    <string name="analysis_explain_preview">預覽 AI 首選</string>
 </resources>
