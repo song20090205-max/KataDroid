@@ -46,7 +46,7 @@ data class KataGoModel(
         @Volatile private var imported: List<KataGoModel> = emptyList()
         val entries get() = bundled + imported
         fun refresh(context: Context) { imported = ModelPackages.installed(context) }
-        fun fromId(id: String?) = entries.firstOrNull { it.id == id } ?: B6
+        fun fromId(id: String?) = entries.firstOrNull { it.id == id } ?: B10
     }
 }
 
