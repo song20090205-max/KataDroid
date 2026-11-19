@@ -29,7 +29,7 @@ data class AppPreferences(
     val rules: GoRules = GoRules.CHINESE,
     val komi: Float = 7.5f,
     val model: KataGoModel = KataGoModel.B10,
-    val backend: EngineBackend = EngineBackend.AUTO,
+    val backend: EngineBackend = EngineBackend.CPU,
     val showMoveExplanation: Boolean = true,
     val computeProfile: ComputeProfile = ComputeProfile.HIGH_PERFORMANCE,
 ) {
@@ -64,6 +64,16 @@ data class AppPreferences(
                 p.edit {
                     putString("compute_profile", ComputeProfile.HIGH_PERFORMANCE.name)
                     putInt("compute_profile_version", 2)
+                }
+            }
+            // Safe-start migration: avoid initializing native inference on first launch.
+            if (p.getInt("compute_profile_version", 0) < 3) {
+                p.edit {
+                    putBoolean("engine_enabled", false)
+                    if (getString("backend", null) == null || getString("backend", null) == EngineBackend.AUTO.name) {
+                        putString("backend", EngineBackend.CPU.name)
+                    }
+                    putInt("compute_profile_version", 3)
                 }
             }
             val profile = ComputeProfile.fromId(p.getString("compute_profile", null))
