@@ -68,9 +68,10 @@ data class AppPreferences(
             }
             // Safe-start migration: avoid initializing native inference on first launch.
             if (p.getInt("compute_profile_version", 0) < 3) {
+                val savedBackend = p.getString("backend", null)
                 p.edit {
                     putBoolean("engine_enabled", false)
-                    if (getString("backend", null) == null || getString("backend", null) == EngineBackend.AUTO.name) {
+                    if (savedBackend == null || savedBackend == EngineBackend.AUTO.name) {
                         putString("backend", EngineBackend.CPU.name)
                     }
                     putInt("compute_profile_version", 3)
