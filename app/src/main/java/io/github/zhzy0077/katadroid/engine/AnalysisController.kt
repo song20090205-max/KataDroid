@@ -47,6 +47,7 @@ class AnalysisController(
     private val factory: (EngineConfig) -> AnalysisSession,
     private val store: AnalysisStore,
     private val benchmarkStore: BenchmarkStore? = null,
+    private val coolingDelayMs: () -> Long = { 0L },
 ) : AutoCloseable {
     private data class Request(val position: AnalysisPosition?, val enabled: Boolean, val visible: Boolean,
                                val maxVisits: Int, val config: EngineConfig, val benchmarkVisits: Int? = null,
@@ -168,6 +169,8 @@ class AnalysisController(
                             if (timed) {
                                 val remaining = ANALYSIS_REFRESH_MS * 1_000_000L - (System.nanoTime() - started)
                                 if (remaining > 0) delay((remaining + 999_999L) / 1_000_000L)
+                                val cooling = coolingDelayMs().coerceIn(0L, 10_000L)
+                                if (cooling > 0) delay(cooling)
                             }
                         }
                         if (command.cancelled.get()) continue
@@ -186,12 +189,22 @@ class AnalysisController(
                             if (enough(state.value.analyses[position.key])) continue
                             activeSession.setPosition(position)
                             sessionPosition = position
-                            val result = activeSession.analyze(request.maxVisits, command.cancelled)
+                            var result: PositionAnalysis? = null
+                            do {
+                                result = if (timed) activeSession.analyzeForTime(ANALYSIS_REFRESH_MS, command.cancelled, request.maxVisits)
+                                    else activeSession.analyze(request.maxVisits, command.cancelled)
+                                if (command.cancelled.get()) break
+                                checkNotNull(result) { "Record analysis ended before completing a position" }
+                                if (timed && !enough(result)) {
+                                    val cooling = coolingDelayMs().coerceIn(0L, 10_000L)
+                                    if (cooling > 0) delay(cooling)
+                                }
+                            } while (timed && !enough(result) && !command.cancelled.get())
                             if (command.cancelled.get()) break
-                            checkNotNull(result) { "Record analysis ended before completing a position" }
-                            check(result.position == position) { "Historical analysis does not match the requested position" }
-                            check(enough(result)) { "Historical analysis did not reach the requested visit budget" }
-                            if (publish(command) { state -> state.copy(analyses = cacheResult(state, result),
+                            val completedResult = checkNotNull(result) { "Record analysis ended before completing a position" }
+                            check(completedResult.position == position) { "Historical analysis does not match the requested position" }
+                            check(enough(completedResult)) { "Historical analysis did not reach the requested visit budget" }
+                            if (publish(command) { state -> state.copy(analyses = cacheResult(state, completedResult),
                                     historyCompleted = state.historyCompleted + 1) }) saveCache(command, actualConfig)
                         }
                         publish(command) { it.copy(historyAnalyzing = false) }
@@ -336,6 +349,18 @@ internal fun visitTargets(limit: Int): List<Int> = buildList {
 }
 
 class KataGoViewModel(application: Application) : AndroidViewModel(application) {
+    private val powerManager = application.getSystemService(android.os.PowerManager::class.java)
+    private fun coolingDelay(): Long {
+        val batterySaver = powerManager?.isPowerSaveMode == true
+        val thermal = if (android.os.Build.VERSION.SDK_INT >= 29) powerManager?.currentThermalStatus ?: 0 else 0
+        val thermalDelay = when {
+            thermal >= android.os.PowerManager.THERMAL_STATUS_CRITICAL -> 5000L
+            thermal >= android.os.PowerManager.THERMAL_STATUS_SEVERE -> 2000L
+            thermal >= android.os.PowerManager.THERMAL_STATUS_MODERATE -> 500L
+            else -> 0L
+        }
+        return maxOf(thermalDelay, if (batterySaver) 500L else 0L)
+    }
     val controller = AnalysisController(
         factory = { config ->
             openSelectedSession(config, NpuProbe.hasRuntimeLibraries(application)) { accelerator ->
@@ -344,6 +369,7 @@ class KataGoViewModel(application: Application) : AndroidViewModel(application) 
         },
         store = FileAnalysisStore(File(application.filesDir, "analysis-cache.json")),
         benchmarkStore = BenchmarkStore(File(application.filesDir, "engine-benchmarks.json")),
+        coolingDelayMs = ::coolingDelay,
     )
     override fun onCleared() { controller.close() }
 }
