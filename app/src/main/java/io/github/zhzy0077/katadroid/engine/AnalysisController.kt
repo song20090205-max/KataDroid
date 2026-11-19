@@ -339,7 +339,7 @@ class KataGoViewModel(application: Application) : AndroidViewModel(application) 
     val controller = AnalysisController(
         factory = { config ->
             openSelectedSession(config, NpuProbe.hasRuntimeLibraries(application)) { accelerator ->
-                KataGoSession.open(application, accelerator, config.model)
+                KataGoSession.open(application, accelerator, config.model, config.searchThreads)
             }
         },
         store = FileAnalysisStore(File(application.filesDir, "analysis-cache.json")),
