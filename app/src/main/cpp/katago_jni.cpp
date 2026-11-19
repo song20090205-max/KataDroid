@@ -1,4 +1,6 @@
 #include <jni.h>
+#include <algorithm>
+#include <thread>
 #include <array>
 #include <cmath>
 #include <atomic>
@@ -294,7 +296,9 @@ struct Engine {
       constructingBridge = nullptr;
       evaluator->spawnServerThreads();
       SearchParams params;
-      params.numThreads = 1;
+      const unsigned int cores = std::thread::hardware_concurrency();
+      const unsigned int usableCores = cores == 0 ? 2u : cores;
+      params.numThreads = static_cast<int>(std::max(2u, std::min(4u, usableCores)));
       params.nodeTableShardsPowerOfTwo = 10;
       params.subtreeValueBiasTableNumShards = 1024;
       search = std::make_unique<Search>(params, evaluator.get(), &logger, "katadroid-search");
