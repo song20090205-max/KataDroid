@@ -141,7 +141,7 @@ private fun MoveExplanation(
             resources.getString(R.string.analysis_explain_waiting)
         playedColor != null && best != null && playedMove != null -> {
             val expected = best.winRateFor(playedColor)
-            val actual = current!!.let { it.winRateFor(playedColor) }
+            val actual = if (playedColor == 1) current!!.blackWinRate else 100f - current!!.blackWinRate
             val loss = expected - actual
             when {
                 loss >= 7f -> resources.getString(R.string.analysis_explain_blunder, playedLabel ?: "", loss.oneDecimal())
