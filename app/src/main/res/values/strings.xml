@@ -31,7 +31,7 @@
     <string name="engines_hint">Switch models and measure search speed</string>
     <string name="model_validation">Model validation</string>
     <string name="validation_hint">Compare local inference with reference outputs</string>
-    <string name="visits_hint">Visits are a search budget, not a fixed strength rating. Turning the engine off keeps saved analysis.</string>
+    <string name="visits_hint">Default: 5,000 visits per position and up to 4 CPU search threads. More visits usually take longer and increase battery use and heat. Turning the engine off keeps saved analysis.</string>
     <string name="apply_settings">Apply all changes</string>
     <string name="settings_saved">All changes saved</string>
     <string name="settings_pending">Unsaved changes</string>
@@ -189,7 +189,7 @@
     <string name="benchmark_setup_time">Initialization %1$s ms · Warm-up %2$s ms (excluded)</string>
     <string name="katago_models">KataGo models</string>
     <string name="model_untested">This backend has not been measured</string>
-    <string name="model_strength_hint">The larger network trades inference speed for stronger play at equal visits in upstream tests. Compare search speed on your device.</string>
+    <string name="model_strength_hint">The stronger b10c128 model is selected by default, with up to 4 CPU search threads. This prioritizes analysis quality; sustained heavy use may increase heat and battery use.</string>
     <string name="compute_device">Compute backend</string>
     <string name="search_benchmark">Search benchmark</string>
     <string name="benchmark_cases">Three fixed positions: empty, opening and after capture. Search starts fresh for each one.</string>
