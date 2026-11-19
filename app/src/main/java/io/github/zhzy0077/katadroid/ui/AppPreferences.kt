@@ -21,6 +21,7 @@ data class AppPreferences(
     val komi: Float = 7.5f,
     val model: KataGoModel = KataGoModel.B6,
     val backend: EngineBackend = EngineBackend.AUTO,
+    val showMoveExplanation: Boolean = true,
 ) {
     val engineConfig get() = EngineConfig(model, backend)
     fun automatic(color: Int) = if (color == 1) autoBlack else autoWhite
@@ -34,6 +35,7 @@ data class AppPreferences(
         putBoolean("auto_black", autoBlack); putBoolean("auto_white", autoWhite)
         putString("rules", rules.id); putFloat("komi", komi)
         putString("model", model.id); putString("backend", backend.name)
+        putBoolean("show_move_explanation", showMoveExplanation)
     }
 
     companion object {
@@ -45,7 +47,8 @@ data class AppPreferences(
                 p.getBoolean("auto_black", false), p.getBoolean("auto_white", false),
                 runCatching { GoRules.fromId(p.getString("rules", "chinese")!!) }.getOrDefault(GoRules.CHINESE),
                 p.getFloat("komi", 7.5f).takeIf(::validKomi) ?: 7.5f,
-                KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)))
+                KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)),
+                p.getBoolean("show_move_explanation", true))
         }
     }
 }
