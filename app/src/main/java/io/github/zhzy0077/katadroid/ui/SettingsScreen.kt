@@ -51,6 +51,7 @@ fun SettingsScreen(
     onBack: () -> Unit, onDiagnostics: () -> Unit, onEngines: () -> Unit,
 ) {
     val resources = LocalResources.current
+    val context = LocalContext.current
     val focus = LocalFocusManager.current
     var draftRule by rememberSaveable(rules) { mutableStateOf(rules) }
     var draftKomi by rememberSaveable(komi) { mutableStateOf(komi.toString()) }
@@ -127,6 +128,20 @@ fun SettingsScreen(
                 IntegerSetting(resources.getString(R.string.touch_offset), "px", draftOffset, 0..300,
                     listOf(0, 60, 120), "touch-offset") { draftOffset = it }
                 Hint(resources.getString(R.string.touch_hint))
+            }
+            SettingsCard {
+                SectionTitle(resources.getString(R.string.floating_assistant_title))
+                Hint(resources.getString(R.string.floating_assistant_settings_hint))
+                Button(onClick = {
+                    if (Settings.canDrawOverlays(context)) {
+                        ContextCompat.startForegroundService(context, Intent(context, FloatingAssistantService::class.java))
+                    } else {
+                        context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:${context.packageName}")))
+                    }
+                }, modifier = Modifier.fillMaxWidth().testTag("start-floating-assistant")) {
+                    Text(resources.getString(R.string.floating_assistant_enable))
+                }
             }
             SettingsCard {
                 SectionTitle(resources.getString(R.string.engine))
