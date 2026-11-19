@@ -2,8 +2,7 @@ package io.github.zhzy0077.katadroid.sgf
 
 /**
  * A stone detected in a Go-board image. Coordinates are zero-based from the
- * upper-left intersection. A null moveNumber means the stone is a setup stone
- * (for example, a handicap stone) rather than a numbered move.
+ * upper-left intersection. A null moveNumber means the stone is a setup stone.
  */
 data class ImageStone(
     val x: Int,
@@ -14,9 +13,10 @@ data class ImageStone(
 
 object ImageSgfConverter {
     /**
-     * Converts a reviewed image recognition result into a single 19x19 SGF.
+     * Converts a reviewed recognition result into a 19x19 SGF.
      * Unnumbered stones become root setup properties; numbered stones become
-     * an ordered main line. No guessed move order is introduced.
+     * an ordered main line. The first visible move may be either color (e.g.
+     * handicap games or a cropped mid-game diagram).
      */
     fun convert(
         stones: List<ImageStone>,
@@ -32,18 +32,24 @@ object ImageSgfConverter {
             require(it.color == 1 || it.color == 2) { "Stone color must be black (1) or white (2)" }
             require(it.moveNumber == null || it.moveNumber in 1..2000) { "Invalid move number" }
         }
-        require(stones.map { it.x to it.y }.distinct().size == stones.size) { "Two stones occupy the same intersection" }
+        require(stones.map { it.x to it.y }.distinct().size == stones.size) {
+            "Two stones occupy the same intersection"
+        }
         val numbered = stones.filter { it.moveNumber != null }.sortedBy { it.moveNumber }
         val setup = stones.filter { it.moveNumber == null }
         require(numbered.isNotEmpty()) { "No numbered moves were detected" }
-        require(numbered.mapNotNull { it.moveNumber } == (1..numbered.size).toList()) {
-            "Move numbers must be continuous from 1; review the detected numbers"
+        val firstNumber = checkNotNull(numbered.first().moveNumber)
+        require(numbered.mapNotNull { it.moveNumber } ==
+            (firstNumber..(firstNumber + numbered.size - 1)).toList()) {
+            "Detected move numbers contain a gap or duplicate; review the image"
         }
+        val firstColor = numbered.first().color
         numbered.forEachIndexed { index, stone ->
-            val expected = if (index % 2 == 0) 1 else 2
-            require(stone.color == expected) { "Move ${index + 1} has the wrong color for alternating play" }
+            val expected = if (index % 2 == 0) firstColor else 3 - firstColor
+            require(stone.color == expected) {
+                "Move number ${stone.moveNumber} has a color inconsistent with alternating play"
+            }
         }
-        require(setup.map { it.color }.distinct().size <= 2)
         val rootProperties = linkedMapOf(
             "FF" to listOf("4"),
             "GM" to listOf("1"),
