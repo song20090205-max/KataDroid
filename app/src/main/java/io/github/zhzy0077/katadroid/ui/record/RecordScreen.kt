@@ -138,7 +138,7 @@ private fun RecordBoard(state: RecordUiState, board: BoardSnapshot, engine: Engi
 
 @Composable
 private fun CurrentAnalysis(state: RecordUiState, viewport: TreeViewportState, engine: EngineUiState, settings: AppPreferences, onRetry: () -> Unit, modifier: Modifier) {
-    if (state.tab == 0) AnalysisPanel(state, engine, settings.engineEnabled, onRetry, modifier, settings.showCandidateMoves)
+    if (state.tab == 0) AnalysisPanel(state, engine, settings.engineEnabled, onRetry, modifier, settings.showCandidateMoves, settings.showMoveExplanation)
     else TreePanel(state, viewport, settings.engineEnabled, state::chooseNode, modifier)
 }
 
