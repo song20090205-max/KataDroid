@@ -37,7 +37,7 @@ import kotlin.math.abs
 internal fun Float.oneDecimal() = String.format(Locale.ROOT, "%.1f", this)
 
 @Composable
-fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean, onRetry: () -> Unit, modifier: Modifier = Modifier, showCandidates: Boolean = true) {
+fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean, onRetry: () -> Unit, modifier: Modifier = Modifier, showCandidates: Boolean = true, showMoveExplanation: Boolean = true) {
     val resources = LocalResources.current
     val position = state.position
     val analysis = engine.analysisFor(position)
@@ -99,7 +99,7 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
                 WinRateChart(samples, position.moves.size, state::seekToNode, Modifier.fillMaxSize())
             }
             if (preview == null) {
-                MoveExplanation(state, analysis, previousAnalysis, playedNode?.color, playedMove)
+                if (showMoveExplanation) MoveExplanation(state, analysis, previousAnalysis, playedNode?.color, playedMove)
                 val pass = analysis?.candidates?.firstOrNull { it.move == PASS }
                 if (showCandidates && pass != null) TextButton(onClick = { state.startPreview(Candidate(pass.label, pass.pv)) },
                     modifier = Modifier.testTag("candidate-pass")) { Text(resources.getString(R.string.pass_preview, pass.label), fontSize = 10.sp) }
