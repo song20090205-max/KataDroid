@@ -27,7 +27,7 @@ data class EngineUiState(
     val positionKey: String? = null,
     val analyses: Map<String, PositionAnalysis> = emptyMap(),
     val error: String? = null,
-    val maxVisits: Int = 500,
+    val maxVisits: Int = 5000,
     val completedAnalysis: PositionAnalysis? = null,
     val liveAnalysis: PositionAnalysis? = null,
     val config: EngineConfig = EngineConfig(),
@@ -231,7 +231,7 @@ class AnalysisController(
     }
 
     fun setTarget(position: AnalysisPosition?, enabled: Boolean, visible: Boolean = true, retry: Boolean = false,
-                  maxVisits: Int = 500, config: EngineConfig = EngineConfig(), history: List<AnalysisPosition> = emptyList(),
+                  maxVisits: Int = 5000, config: EngineConfig = EngineConfig(), history: List<AnalysisPosition> = emptyList(),
                   continuous: Boolean = false) {
         require(maxVisits in 1..MAX_VISITS)
         synchronized(lock) {
