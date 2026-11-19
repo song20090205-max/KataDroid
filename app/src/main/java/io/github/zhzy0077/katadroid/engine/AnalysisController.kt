@@ -225,6 +225,8 @@ class AnalysisController(
                                 }
                                 val remaining = ANALYSIS_REFRESH_MS * 1_000_000L - (System.nanoTime() - started)
                                 if (remaining > 0) delay((remaining + 999_999L) / 1_000_000L)
+                                val cooling = coolingDelayMs().coerceIn(0L, 10_000L)
+                                if (cooling > 0) delay(cooling)
                             }
                         }
                     } catch (error: Throwable) {
