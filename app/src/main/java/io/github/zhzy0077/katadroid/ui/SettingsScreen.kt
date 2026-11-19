@@ -49,6 +49,7 @@ fun SettingsScreen(
     var draftRule by rememberSaveable(rules) { mutableStateOf(rules) }
     var draftKomi by rememberSaveable(komi) { mutableStateOf(komi.toString()) }
     var draftVisits by rememberSaveable(settings.maxVisits) { mutableStateOf(settings.maxVisits.toString()) }
+    var draftProfile by rememberSaveable(settings.computeProfile) { mutableStateOf(settings.computeProfile) }
     var draftOffset by rememberSaveable(settings.touchOffsetPx) { mutableStateOf(settings.touchOffsetPx.toString()) }
     var autoBlack by rememberSaveable(settings.autoBlack) { mutableStateOf(settings.autoBlack) }
     var autoWhite by rememberSaveable(settings.autoWhite) { mutableStateOf(settings.autoWhite) }
@@ -59,7 +60,7 @@ fun SettingsScreen(
     val parsedVisits = draftVisits.toIntOrNull()?.takeIf { it in 1..MAX_VISITS }
     val parsedOffset = draftOffset.toIntOrNull()?.takeIf { it in 0..300 }
     val valid = parsedKomi != null && parsedVisits != null && parsedOffset != null
-    val changed = parsedKomi != komi || draftRule != rules || parsedVisits != settings.maxVisits ||
+    val changed = parsedKomi != komi || draftRule != rules || draftProfile != settings.computeProfile || parsedVisits != settings.maxVisits ||
         parsedOffset != settings.touchOffsetPx || autoBlack != settings.autoBlack || autoWhite != settings.autoWhite ||
         coordinates != settings.coordinates || candidates != settings.candidates || showMoveExplanation != settings.showMoveExplanation
 
@@ -69,6 +70,21 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SettingsCard {
                 SectionTitle(resources.getString(R.string.search_automation))
+                Text(resources.getString(R.string.compute_profile), fontSize = 14.sp, color = GoColors.Ink)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ComputeProfile.entries.forEach { profile ->
+                        val label = when (profile) {
+                            ComputeProfile.POWER_SAVING -> R.string.profile_power_saving
+                            ComputeProfile.BALANCED -> R.string.profile_balanced
+                            ComputeProfile.HIGH_PERFORMANCE -> R.string.profile_high_performance
+                        }
+                        FilterChip(selected = draftProfile == profile, onClick = {
+                            draftProfile = profile
+                            draftVisits = profile.visits.toString()
+                        }, label = { Text(resources.getString(label)) }, modifier = Modifier.weight(1f).testTag("compute-profile-${profile.name}"))
+                    }
+                }
+                Hint(resources.getString(R.string.compute_profile_hint))
                 IntegerSetting(resources.getString(R.string.search_limit), "visits", draftVisits, 1..MAX_VISITS,
                     listOf(100, 500, 1000, 5000), "search-limit") { draftVisits = it }
                 ToggleRow(resources.getString(R.string.auto_black), resources.getString(R.string.katago_black), autoBlack, { autoBlack = it }, "auto-black")
@@ -122,7 +138,8 @@ fun SettingsScreen(
                     focus.clearFocus()
                     onApply(settings.copy(maxVisits = checkNotNull(parsedVisits), touchOffsetPx = checkNotNull(parsedOffset),
                         autoBlack = autoBlack, autoWhite = autoWhite, coordinates = coordinates, candidates = candidates,
-                        showMoveExplanation = showMoveExplanation),
+                        showMoveExplanation = showMoveExplanation, computeProfile = draftProfile,
+                        model = if (draftProfile != settings.computeProfile) draftProfile.model else settings.model),
                         draftRule, checkNotNull(parsedKomi))
                 }, enabled = changed && valid && !busy, modifier = Modifier.fillMaxWidth().testTag("apply-settings")) {
                     Text(resources.getString(if (busy) R.string.applying else if (changed) R.string.apply_settings else R.string.settings_saved))
