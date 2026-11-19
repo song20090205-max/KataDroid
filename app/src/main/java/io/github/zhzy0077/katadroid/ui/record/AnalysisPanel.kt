@@ -143,11 +143,14 @@ private fun MoveExplanation(
             val expected = best.winRateFor(playedColor)
             val actual = if (playedColor == 1) current!!.blackWinRate else 100f - current!!.blackWinRate
             val loss = expected - actual
+            val expectedLead = if (playedColor == 1) best.blackLead else -best.blackLead
+            val actualLead = if (playedColor == 1) current!!.blackLead else -current!!.blackLead
+            val scoreLoss = expectedLead - actualLead
             when {
-                loss >= 7f -> resources.getString(R.string.analysis_explain_blunder, playedLabel ?: "", loss.oneDecimal())
-                loss >= 2.5f -> resources.getString(R.string.analysis_explain_mistake, playedLabel ?: "", loss.oneDecimal())
-                loss >= -1f -> resources.getString(R.string.analysis_explain_good, playedLabel ?: "", abs(loss).oneDecimal())
-                else -> resources.getString(R.string.analysis_explain_better, playedLabel ?: "", abs(loss).oneDecimal())
+                loss >= 7f -> resources.getString(R.string.analysis_explain_blunder, playedLabel ?: "", loss.oneDecimal(), scoreLoss.oneDecimal())
+                loss >= 2.5f -> resources.getString(R.string.analysis_explain_mistake, playedLabel ?: "", loss.oneDecimal(), scoreLoss.oneDecimal())
+                loss >= -1f -> resources.getString(R.string.analysis_explain_good, playedLabel ?: "", abs(loss).oneDecimal(), scoreLoss.oneDecimal())
+                else -> resources.getString(R.string.analysis_explain_better, playedLabel ?: "", abs(loss).oneDecimal(), scoreLoss.oneDecimal())
             }
         }
         best != null -> {
