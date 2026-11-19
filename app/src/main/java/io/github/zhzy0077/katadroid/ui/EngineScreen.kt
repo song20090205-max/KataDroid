@@ -128,7 +128,7 @@ fun EngineScreen(
                     Text(when (benchmark.phase) {
                         BenchmarkPhase.STARTING -> resources.getString(R.string.benchmark_loading, benchmark.config.model.id)
                         BenchmarkPhase.WARMING -> resources.getString(R.string.benchmark_warming, SearchBenchmark.WARMUP_VISITS)
-                        else -> "${benchmarkCaseLabel(resources, benchmark.caseLabel)} · ${benchmark.completedVisits} / ${benchmark.totalVisits} visits"
+                        else -> resources.getString(R.string.benchmark_progress, benchmarkCaseLabel(resources, benchmark.caseLabel), benchmark.completedVisits, benchmark.totalVisits)
                     }, fontSize = 12.sp, color = GoColors.Primary, modifier = Modifier.testTag("benchmark-status"))
                     OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth().testTag("cancel-benchmark")) { Text(resources.getString(R.string.cancel_benchmark)) }
                 } else {
@@ -140,7 +140,7 @@ fun EngineScreen(
                 }
                 selectedResult?.let { result ->
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), color = GoColors.Outline)
-                    Text("${decimal(result.visitsPerSecond)} visits/s", fontSize = 28.sp, color = GoColors.Primary,
+                    Text(resources.getString(R.string.benchmark_rate, decimal(result.visitsPerSecond)), fontSize = 28.sp, color = GoColors.Primary,
                         fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag("benchmark-rate"))
                     Hint(resources.getString(R.string.benchmark_completed, SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(result.timestamp)), result.config.displayLabel(resources)))
                     Hint(resources.getString(R.string.benchmark_search_time, result.visits, decimal(result.searchNanos / 1e9, 2)))
@@ -148,7 +148,7 @@ fun EngineScreen(
                     result.samples.forEach { sample ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(benchmarkCaseLabel(resources, sample.label), fontSize = 12.sp, color = GoColors.Muted)
-                            Text("${decimal(sample.visitsPerSecond)} visits/s", fontSize = 12.sp, color = GoColors.Ink)
+                            Text(resources.getString(R.string.benchmark_sample_rate, decimal(sample.visitsPerSecond)), fontSize = 12.sp, color = GoColors.Ink)
                         }
                     }
                     Hint(result.device)
