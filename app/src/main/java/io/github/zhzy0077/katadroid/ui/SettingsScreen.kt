@@ -54,13 +54,14 @@ fun SettingsScreen(
     var autoWhite by rememberSaveable(settings.autoWhite) { mutableStateOf(settings.autoWhite) }
     var coordinates by rememberSaveable(settings.coordinates) { mutableStateOf(settings.coordinates) }
     var candidates by rememberSaveable(settings.candidates) { mutableStateOf(settings.candidates) }
+    var showMoveExplanation by rememberSaveable(settings.showMoveExplanation) { mutableStateOf(settings.showMoveExplanation) }
     val parsedKomi = draftKomi.toFloatOrNull()?.takeIf(::validKomi)
     val parsedVisits = draftVisits.toIntOrNull()?.takeIf { it in 1..MAX_VISITS }
     val parsedOffset = draftOffset.toIntOrNull()?.takeIf { it in 0..300 }
     val valid = parsedKomi != null && parsedVisits != null && parsedOffset != null
     val changed = parsedKomi != komi || draftRule != rules || parsedVisits != settings.maxVisits ||
         parsedOffset != settings.touchOffsetPx || autoBlack != settings.autoBlack || autoWhite != settings.autoWhite ||
-        coordinates != settings.coordinates || candidates != settings.candidates
+        coordinates != settings.coordinates || candidates != settings.candidates || showMoveExplanation != settings.showMoveExplanation
 
     Column(Modifier.fillMaxSize().imePadding().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)).testTag("settings-screen")) {
         PageHeader(resources.getString(R.string.settings), onBack)
@@ -98,6 +99,9 @@ fun SettingsScreen(
                 ToggleRow(resources.getString(R.string.candidates), resources.getString(R.string.candidates_hint), candidates, { candidates = it }, "setting-candidates")
                 Hint(resources.getString(R.string.candidate_color_hint))
                 HorizontalDivider(color = GoColors.Outline)
+                ToggleRow(resources.getString(R.string.move_explanation), resources.getString(R.string.move_explanation_hint),
+                    showMoveExplanation, { showMoveExplanation = it }, "setting-move-explanation")
+                HorizontalDivider(color = GoColors.Outline)
                 IntegerSetting(resources.getString(R.string.touch_offset), "px", draftOffset, 0..300,
                     listOf(0, 60, 120), "touch-offset") { draftOffset = it }
                 Hint(resources.getString(R.string.touch_hint))
@@ -117,7 +121,8 @@ fun SettingsScreen(
                 Button(onClick = {
                     focus.clearFocus()
                     onApply(settings.copy(maxVisits = checkNotNull(parsedVisits), touchOffsetPx = checkNotNull(parsedOffset),
-                        autoBlack = autoBlack, autoWhite = autoWhite, coordinates = coordinates, candidates = candidates),
+                        autoBlack = autoBlack, autoWhite = autoWhite, coordinates = coordinates, candidates = candidates,
+                        showMoveExplanation = showMoveExplanation),
                         draftRule, checkNotNull(parsedKomi))
                 }, enabled = changed && valid && !busy, modifier = Modifier.fillMaxWidth().testTag("apply-settings")) {
                     Text(resources.getString(if (busy) R.string.applying else if (changed) R.string.apply_settings else R.string.settings_saved))
