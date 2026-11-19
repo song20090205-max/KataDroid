@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate a Taiwan Traditional Chinese Android resource file from zh-CN."""
+# This is generated during CI so the APK always contains the matching locale.
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from opencc import OpenCC
@@ -24,8 +25,6 @@ replacements = {
     "搜索": "搜尋",
     "访问数": "訪問數",
     "自动": "自動",
-    "黑棋": "黑棋",
-    "白棋": "白棋",
     "导入": "匯入",
     "导出": "匯出",
     "文件": "檔案",
@@ -38,8 +37,6 @@ replacements = {
     "节点": "節點",
     "变化树": "變化樹",
     "计算": "計算",
-    "引擎": "引擎",
-    "棋局": "棋局",
 }
 for node in root.iter():
     if node.text:
