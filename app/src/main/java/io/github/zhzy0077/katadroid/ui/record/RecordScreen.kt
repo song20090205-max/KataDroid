@@ -55,10 +55,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.zhzy0077.katadroid.ui.GoIcon
@@ -154,10 +151,7 @@ private fun RecordHeader(state: RecordUiState, settings: AppPreferences, engine:
     var menu by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = if (compact) 6.dp else 20.dp, end = if (compact) 0.dp else 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(buildAnnotatedString {
-                append("Kata")
-                withStyle(SpanStyle(color = GoColors.Primary)) { append("Droid") }
-            }, fontSize = if (compact) 18.sp else 21.sp, letterSpacing = (-.6).sp,
+            Text(resources.getString(R.string.app_name), fontSize = if (compact) 18.sp else 21.sp, letterSpacing = (-.6).sp,
                 fontWeight = FontWeight.SemiBold, color = GoColors.Ink, modifier = Modifier.weight(1f))
             EngineSwitch(settings.engineEnabled, engine.phase, onEnabled)
             Spacer(Modifier.width(4.dp))
