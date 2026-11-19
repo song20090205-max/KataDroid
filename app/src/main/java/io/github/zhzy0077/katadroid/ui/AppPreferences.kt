@@ -41,6 +41,14 @@ data class AppPreferences(
     companion object {
         fun load(context: Context): AppPreferences {
             val p = context.getSharedPreferences("board_preferences", Context.MODE_PRIVATE)
+            // One-time migration to the explicitly requested high-compute profile.
+            if (p.getInt("compute_profile_version", 0) < 1) {
+                p.edit {
+                    putString("model", KataGoModel.B10.id)
+                    putInt("max_visits", 5000)
+                    putInt("compute_profile_version", 1)
+                }
+            }
             return AppPreferences(p.getBoolean("coordinates", true), p.getBoolean("candidates", true),
                 p.getBoolean("engine_enabled", true),
                 p.getInt("max_visits", 5000).coerceIn(1, MAX_VISITS), p.getInt("touch_offset_px", 0).coerceIn(0, 300),
