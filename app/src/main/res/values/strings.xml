@@ -21,6 +21,8 @@
     <string name="coordinates_hint">Show column letters and row numbers</string>
     <string name="candidates">Candidate moves</string>
     <string name="candidates_hint">Show A / B / C; hold to preview</string>
+    <string name="move_explanation">AI move explanation panel</string>
+    <string name="move_explanation_hint">Show the AI top choice and compare your move by win rate and score lead. Hiding this panel does not affect game analysis.</string>
     <string name="candidate_color_hint">Moves close to the best win rate are green. Larger losses turn yellow, then red. Colors use the player to move; letters keep the search ranking.</string>
     <string name="touch_offset">Place above your finger</string>
     <string name="touch_hint">Offset in physical screen pixels. Drag to preview, release to play. The touch area extends below the board so the last row stays reachable.</string>
