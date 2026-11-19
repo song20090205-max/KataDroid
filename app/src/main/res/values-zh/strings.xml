@@ -29,7 +29,7 @@
     <string name="engines_hint">切换模型与测试搜索性能</string>
     <string name="model_validation">模型数值验证</string>
     <string name="validation_hint">对照参考输出验证本机推理</string>
-    <string name="visits_hint">访问数不代表固定棋力。关闭引擎后保留已有分析；新局面仅显示该局面的结果。</string>
+    <string name="visits_hint">搜索次数不代表固定棋力。关闭引擎后保留已有分析；新局面仅显示该局面的结果。</string>
     <string name="apply_settings">应用全部设置</string>
     <string name="settings_saved">全部设置已保存</string>
     <string name="settings_pending">有未保存的更改</string>
@@ -123,7 +123,7 @@
     <string name="analysis_description">第 %1$d 手，%2$s，%3$s</string>
     <string name="pass_preview">%1$s · 停一手 · 查看变化</string>
     <string name="board_scoring">%1$s规则 · 盘面计分</string>
-    <string name="cached_visits">已有 %1$d visits · 新搜索预算 %2$d</string>
+    <string name="cached_visits">已搜索 %1$d 次 · 新搜索预算 %2$d</string>
     <string name="last_analyzed">最后已分析第 %1$d 手</string>
     <string name="black_wins">黑棋胜</string>
     <string name="white_wins">白棋胜</string>
@@ -176,14 +176,14 @@
     <string name="tree_current"> 当前</string>
     <string name="tree_minimap">整棵棋谱树缩略图，方框标示当前视野</string>
     <string name="backend_hint">自动模式先尝试可用的 NPU 运行时，再使用 CPU。手选 CPU、GPU 或 NPU 时会报告后端错误。GPU 使用 FP32 并检查 CPU 数值参考。</string>
-    <string name="previous_speed">上次 %1$s visits/s · %2$d × %3$d · %4$s</string>
+    <string name="previous_speed">上次 %1$s 次搜索／秒 · %2$d × %3$d · %4$s</string>
     <string name="model_weights">当前权重：%1$s</string>
-    <string name="benchmark_visits_hint">每局面 %1$d visits，共 %2$d；不改变棋局搜索预算。</string>
+    <string name="benchmark_visits_hint">每个局面搜索 %1$d 次，共 %2$d 次；不改变棋局搜索预算。</string>
     <string name="benchmark_loading">正在加载 %1$s…</string>
     <string name="benchmark_warming">预热中 · %1$d visits</string>
     <string name="benchmark_failed">测试失败：%1$s</string>
     <string name="benchmark_completed">上次完成 · %1$s · %2$s</string>
-    <string name="benchmark_search_time">%1$d 实际 visits / %2$s 秒搜索</string>
+    <string name="benchmark_search_time">实际搜索 %1$d 次／耗时 %2$s 秒</string>
     <string name="benchmark_setup_time">初始化 %1$s ms · 预热 %2$s ms（另计）</string>
     <string name="katago_models">KataGo 模型</string>
     <string name="model_untested">尚未测试此后端</string>
@@ -195,13 +195,13 @@
     <string name="run_benchmark">测试模型性能</string>
     <string name="rerun_benchmark">重新测试</string>
     <string name="benchmark_cancelled">测试已取消，未保存本次结果。</string>
-    <string name="benchmark_method">visits/s = 实际搜索访问数 ÷ 搜索耗时。测速期间暂停棋局分析与自动落子，离开或切换模型会取消测试。</string>
+    <string name="benchmark_method">每秒搜尋次數 = 實際搜尋次數 ÷ 搜尋耗時。测速期间暂停棋局分析与自动落子，离开或切换模型会取消测试。</string>
     <string name="benchmark_caveat">这是短时搜索吞吐量，受局面、温度与后台负载影响，不直接代表棋力。</string>
     <string name="case_empty">空棋盘</string>
     <string name="case_opening">布局八手</string>
     <string name="case_capture">提子后白走</string>
     <string name="cpu_validation_only">当前安装包在本设备上没有可用的 NPU 运行库，可使用 CPU 验证。</string>
-    <string name="diagnostics_description">KataGo %1$s · 19×19。使用三个固定局面，对照官方模型验证 %2$s 输出；搜索 visits/s 请在引擎与模型页面测试。</string>
+    <string name="diagnostics_description">KataGo %1$s · 19×19。使用三个固定局面，对照官方模型验证 %2$s 输出；搜尋速度請在引擎與模型頁面測試。</string>
     <string name="validation_waiting">等待开始验证</string>
     <string name="diagnostics_title">模型验证</string>
     <string name="local_inference">KataGo · 本机推理</string>
@@ -234,4 +234,8 @@
     <string name="model_import_complete">已导入 %1$s。请在上方选择该模型以使用。</string>
     <string name="model_import_failed">模型导入失败。请检查模型包版本、校验和及 CPU 数值参考。</string>
     <string name="model_import_hint">导入包含通用计算图、对应 KataGo 描述文件及数值参考的 .kdmodel ZIP 包。内置模型仍可使用。</string>
+    <string name="visits_count">%1$d 次搜索</string>
+    <string name="benchmark_progress">%1$s · %2$d / %3$d 次搜索</string>
+    <string name="benchmark_rate">%1$s 次搜索／秒</string>
+    <string name="benchmark_sample_rate">%1$s 次搜索／秒</string>
 </resources>
