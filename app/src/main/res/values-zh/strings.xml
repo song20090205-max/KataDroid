@@ -31,7 +31,7 @@
     <string name="engines_hint">切换模型与测试搜索性能</string>
     <string name="model_validation">模型数值验证</string>
     <string name="validation_hint">对照参考输出验证本机推理</string>
-    <string name="visits_hint">搜索次数不代表固定棋力。关闭引擎后保留已有分析；新局面仅显示该局面的结果。</string>
+    <string name="visits_hint">默认每个局面搜索 5000 次，并使用最多 4 个 CPU 搜索线程。次数越高通常需要更久，也会增加耗电与发热；关闭引擎后保留已有分析。</string>
     <string name="apply_settings">应用全部设置</string>
     <string name="settings_saved">全部设置已保存</string>
     <string name="settings_pending">有未保存的更改</string>
@@ -189,7 +189,7 @@
     <string name="benchmark_setup_time">初始化 %1$s ms · 预热 %2$s ms（另计）</string>
     <string name="katago_models">KataGo 模型</string>
     <string name="model_untested">尚未测试此后端</string>
-    <string name="model_strength_hint">b10c128 在官方相同搜索次数的测试中更强。更大网络会增加推理开销，可结合本机测速选择。</string>
+    <string name="model_strength_hint">默认使用较强的 b10c128 模型；配合较高搜索次数与最多 4 个 CPU 搜索线程，优先分析质量。长时间高负载可能增加耗电与发热。</string>
     <string name="compute_device">计算设备</string>
     <string name="search_benchmark">搜索性能测试</string>
     <string name="benchmark_cases">空棋盘、布局、提子后三个固定局面；每个局面从零搜索。</string>
