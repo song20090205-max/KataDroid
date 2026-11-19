@@ -24,6 +24,19 @@ class ImageSgfConverterTest {
         assertEquals("dp", root.children.single().children.single().children.single().properties["B"]?.single())
     }
 
+    @Test fun acceptsWhiteToPlayAndNumberingFromPartialDiagram() {
+        val root = SgfCodec.parse(ImageSgfConverter.convert(listOf(
+            ImageStone(3, 3, 1),
+            ImageStone(15, 15, 1),
+            ImageStone(8, 8, 2, 27),
+            ImageStone(9, 8, 1, 28),
+        ))).single()
+        assertEquals(listOf("dd", "pp"), root.properties["AB"])
+        assertEquals("W", root.children.single().properties.keys.single())
+        assertEquals("ii", root.children.single().properties["W"]?.single())
+        assertEquals("B", root.children.single().children.single().properties.keys.single())
+    }
+
     @Test fun rejectsMissingNumbersGapsDuplicateIntersectionsAndWrongColors() {
         assertThrows(IllegalArgumentException::class.java) {
             ImageSgfConverter.convert(listOf(ImageStone(0, 0, 1)))
@@ -35,7 +48,7 @@ class ImageSgfConverterTest {
             ImageSgfConverter.convert(listOf(ImageStone(0, 0, 1, 1), ImageStone(0, 0, 2, 2)))
         }
         assertThrows(IllegalArgumentException::class.java) {
-            ImageSgfConverter.convert(listOf(ImageStone(0, 0, 2, 1)))
+            ImageSgfConverter.convert(listOf(ImageStone(0, 0, 2, 1), ImageStone(1, 0, 2, 2)))
         }
     }
 }
