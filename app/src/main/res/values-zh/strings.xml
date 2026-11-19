@@ -255,4 +255,16 @@
     <string name="analysis_explain_blunder">你下的 %1$s 與 AI 原先首選相比，預估損失約 %2$s 個勝率百分點；目數評估差約 %3$s 目，局面評估下降明顯。</string>
     <string name="analysis_explain_better">你下的 %1$s 目前評估比 AI 原先首選高約 %2$s 個勝率百分點；目數評估差約 %3$s 目。由於搜尋結果可能波動，建議提高搜尋次數確認。</string>
     <string name="analysis_explain_preview">預覽 AI 首選</string>
+
+    <string name="floating_assistant_title">棋盤懸浮助手</string>
+    <string name="floating_assistant_settings_hint">在你有權測試的圍棋程式上顯示可拖曳懸浮按鈕。此階段先完成懸浮視窗；螢幕擷取、棋盤辨識與 KataGo 分析整合仍在開發。</string>
+    <string name="floating_assistant_enable">啟動／設定懸浮助手</string>
+    <string name="floating_assistant_bubble">棋</string>
+    <string name="floating_assistant_description">圍棋懸浮助手，點擊展開</string>
+    <string name="floating_assistant_prototype">懸浮助手測試版\n目前已啟動懸浮視窗。下一階段加入使用者授權的畫面擷取、棋盤辨識與 KataGo 局面分析。</string>
+    <string name="floating_assistant_close_panel">收合面板</string>
+    <string name="floating_assistant_stop">停止懸浮助手</string>
+    <string name="floating_assistant_notification_title">KataGo 懸浮助手</string>
+    <string name="floating_assistant_notification_text">懸浮按鈕正在顯示；點擊通知可返回應用程式。</string>
+
 </resources>
