@@ -71,8 +71,8 @@ if source_names.keys() != generated_names.keys():
     raise SystemExit("zh-TW resource names do not match the source locale")
 for name, source_value in source_names.items():
     target_value = generated_names[name]
-    source_args = re.findall(r"%\\d+\\$[-+0-9.#]*[a-zA-Z]", source_value)
-    target_args = re.findall(r"%\\d+\\$[sd]", target_value)
+    source_args = re.findall(r"%\d+\$[-+0-9.#]*[a-zA-Z]", source_value)
+    target_args = re.findall(r"%\d+\$[-+0-9.#]*[a-zA-Z]", target_value)
     if source_args != target_args:
         raise SystemExit(f"Formatting arguments changed for {name}: {source_args} != {target_args}")
 print(f"Generated and validated {target} from {source}")
