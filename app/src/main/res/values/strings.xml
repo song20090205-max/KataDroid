@@ -243,7 +243,7 @@
     <string name="analysis_explain_waiting">Waiting for enough analysis of the positions before and after this move.</string>
     <string name="analysis_explain_best">Current top choice: %1$s (%2$d visits). It ranks first in the current search.</string>
     <string name="analysis_explain_current">Top choice: %1$s · %2$d visits. Its estimated win rate is %3$s percentage points above the second candidate.</string>
-    <string name="analysis_explain_good">Your move %1$s is close to KataGo&#39;s previous top choice (estimated win-rate gap: %2$s percentage points; score-lead gap: %3$s points).</string>
+    <string name="analysis_explain_good">Your move %1$s is close to the previous top choice from KataGo (estimated win-rate gap: %2$s percentage points; score-lead gap: %3$s points).</string>
     <string name="analysis_explain_mistake">Move %1$s is estimated to lose about %2$s win-rate percentage points compared with the previous top choice (score-lead gap: %3$s points).</string>
     <string name="analysis_explain_blunder">Move %1$s is estimated to lose about %2$s win-rate percentage points compared with the previous top choice (score-lead gap: %3$s points), a large evaluation drop.</string>
     <string name="analysis_explain_better">Move %1$s currently evaluates about %2$s win-rate percentage points better than the previous top choice (score-lead gap: %3$s points). Increase visits to confirm because search estimates can vary.</string>
