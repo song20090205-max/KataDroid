@@ -13,7 +13,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import android.content.Intent\nimport android.net.Uri\nimport android.provider.Settings\nimport androidx.compose.ui.platform.LocalContext\nimport androidx.compose.ui.platform.LocalResources
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -23,7 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.zhzy0077.katadroid.FloatingAssistantService\nimport androidx.core.content.ContextCompat\nimport io.github.zhzy0077.katadroid.R
+import io.github.zhzy0077.katadroid.FloatingAssistantService
+import androidx.core.content.ContextCompat
+import io.github.zhzy0077.katadroid.R
 import io.github.zhzy0077.katadroid.engine.GoRules
 import io.github.zhzy0077.katadroid.engine.MAX_VISITS
 import io.github.zhzy0077.katadroid.engine.validKomi
