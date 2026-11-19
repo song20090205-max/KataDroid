@@ -180,14 +180,14 @@
     <string name="model_weights">当前权重：%1$s</string>
     <string name="benchmark_visits_hint">每个局面搜索 %1$d 次，共 %2$d 次；不改变棋局搜索预算。</string>
     <string name="benchmark_loading">正在加载 %1$s…</string>
-    <string name="benchmark_warming">预热中 · %1$d visits</string>
+    <string name="benchmark_warming">预热中 · %1$d 次搜索</string>
     <string name="benchmark_failed">测试失败：%1$s</string>
     <string name="benchmark_completed">上次完成 · %1$s · %2$s</string>
     <string name="benchmark_search_time">实际搜索 %1$d 次／耗时 %2$s 秒</string>
     <string name="benchmark_setup_time">初始化 %1$s ms · 预热 %2$s ms（另计）</string>
     <string name="katago_models">KataGo 模型</string>
     <string name="model_untested">尚未测试此后端</string>
-    <string name="model_strength_hint">b10c128 在官方等 visits 测试中更强。更大网络会增加推理开销，可结合本机测速选择。</string>
+    <string name="model_strength_hint">b10c128 在官方相同搜索次数的测试中更强。更大网络会增加推理开销，可结合本机测速选择。</string>
     <string name="compute_device">计算设备</string>
     <string name="search_benchmark">搜索性能测试</string>
     <string name="benchmark_cases">空棋盘、布局、提子后三个固定局面；每个局面从零搜索。</string>
