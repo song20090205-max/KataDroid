@@ -16,6 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
+import android.content.Context
+import android.content.ContextWrapper
+import android.app.Activity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -58,7 +61,15 @@ fun KataDroidApp() {
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(hostContext) {
-        val activity = hostContext as? android.app.Activity
+        var currentContext: Context? = hostContext
+        var activity: Activity? = null
+        while (currentContext != null) {
+            if (currentContext is Activity) {
+                activity = currentContext
+                break
+            }
+            currentContext = (currentContext as? ContextWrapper)?.baseContext
+        }
         val recognizedSgf = activity?.intent?.getStringExtra(io.github.zhzy0077.katadroid.BoardCornerPickerActivity.EXTRA_IMPORTED_SGF)
         if (!recognizedSgf.isNullOrBlank()) {
             activity.intent.removeExtra(io.github.zhzy0077.katadroid.BoardCornerPickerActivity.EXTRA_IMPORTED_SGF)
