@@ -309,7 +309,7 @@ private class BoardReviewView(
     }
 }
 
-private data class RecognizedBoard(val rows: List<List<Char>>) {
+internal data class RecognizedBoard(val rows: List<List<Char>>) {
     val blackCount get() = rows.sumOf { row -> row.count { it == 'X' } }
     val whiteCount get() = rows.sumOf { row -> row.count { it == 'O' } }
     val uncertainCount get() = rows.sumOf { row -> row.count { it == '?' } }
@@ -330,7 +330,7 @@ private data class RecognizedBoard(val rows: List<List<Char>>) {
     }
 }
 
-private object GoBoardImageRecognizer {
+internal object GoBoardImageRecognizer {
     private const val OUTPUT_SIZE = 760
     private const val GRID_MARGIN = 30f
     private const val GRID_STEP = (OUTPUT_SIZE - 2f * GRID_MARGIN) / 18f
