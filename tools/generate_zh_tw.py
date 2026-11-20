@@ -15,6 +15,13 @@ converter = OpenCC("s2tw")
 tree = ET.parse(source)
 root = tree.getroot()
 
+# Drop stale translated entries that no longer exist in the app default locale.
+default_tree = ET.parse("app/src/main/res/values/strings.xml")
+default_names = {node.get("name") for node in default_tree.getroot().findall("string")}
+for node in list(root.findall("string")):
+    if node.get("name") not in default_names:
+        root.remove(node)
+
 # Prefer Taiwan UI terminology over literal character conversion.
 replacements = {
     "设置": "設定",
