@@ -266,7 +266,7 @@
     <string name="screen_capture_preview_description">你已授權擷取的螢幕畫面預覽</string>
     <string name="screen_capture_notifications_required">請允許通知，才能開啟擷取畫面的預覽。</string>
     <string name="board_capture_start">校準圍棋棋盤</string>
-    <string name="board_capture_corner_hint">依序點選棋盤最外側四個線交點：左上、右上、右下、左下。</string>
+    <string name="board_capture_corner_hint">任意順序點選棋盤最外側四個線交點，程式會自動排列角點。</string>
     <string name="board_capture_corner_progress">已選取角點：%1$d / 4</string>
     <string name="board_capture_reset">重設</string>
     <string name="board_capture_recognize">辨識棋子</string>
