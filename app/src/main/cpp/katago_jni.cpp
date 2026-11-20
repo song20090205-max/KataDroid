@@ -424,8 +424,23 @@ static jstring analyzeSearch(JNIEnv* env, jlong handle, jint visits, jint millis
         pvPlayer = getOpp(pvPlayer);
       }
       if (pv.empty()) pv.push_back(point(choice.move));
+      json opponentReplies = json::array();
+      // Inspect the already-expanded child node after this candidate move.
+      // This exposes several opponent replies from the SAME MCTS tree, without
+      // resetting the position or launching additional neural-network searches.
+      const SearchNode* child = e.search->getChildForMove(e.search->getRootNode(), choice.move);
+      if (child != nullptr) {
+        std::vector<AnalysisData> replies;
+        e.search->getAnalysisData(*child, replies, 3, false, 5, false);
+        for (const auto& reply : replies) {
+          if (opponentReplies.size() >= 3) break;
+          if (reply.numVisits <= 0 || !e.search->isLegalStrict(reply.move, getOpp(e.search->getRootPla()))) continue;
+          opponentReplies.push_back({{"move", point(reply.move)}, {"visits", reply.numVisits}});
+        }
+      }
       result["candidates"].push_back({{"move", point(choice.move)}, {"visits", choice.numVisits},
-          {"blackWinRate", 50.0 * (1.0 - choice.winLossValue)}, {"blackLead", -choice.lead}, {"pv", pv}});
+          {"blackWinRate", 50.0 * (1.0 - choice.winLossValue)}, {"blackLead", -choice.lead},
+          {"pv", pv}, {"opponentReplies", opponentReplies}});
     }
     return env->NewStringUTF(result.dump().c_str());
   } catch (const std::exception& error) { throwJava(env, error); return nullptr; }
