@@ -98,7 +98,8 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
                         io.github.zhzy0077.katadroid.engine.ReplyRisk.LOW_CONFIDENCE -> "｜疑似威脅，樣本少"
                         io.github.zhzy0077.katadroid.engine.ReplyRisk.NONE -> ""
                     }
-                    "$move（對手勝率評估 $swing${reply.winRateSwing.oneDecimal()} 個百分點、領先 ${reply.opponentLead.oneDecimal()} 目、${reply.visits}訪$risk）"
+                    val leadSign = if (reply.opponentLead >= 0f) "+" else ""
+                    "$move（對手勝率 ${reply.opponentWinRate.oneDecimal()}%（$swing${reply.winRateSwing.oneDecimal()} 個百分點）、目差 $leadSign${reply.opponentLead.oneDecimal()} 目、${reply.visits}訪$risk）"
                 }.ifEmpty {
                     listOfNotNull(candidate.pv.getOrNull(1)?.let { reply ->
                         BoardPoint.fromIndex(reply)?.label ?: resources.getString(R.string.pass_move)
