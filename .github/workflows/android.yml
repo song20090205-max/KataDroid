@@ -35,7 +35,18 @@ jobs:
 
       # Preserve a validated build artifact even if the emulator regression test fails or times out.
 
+      # Save the APK before emulator tests so it survives a regression-test failure.
+      - name: Upload KataGo Master APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: KataGo-Master-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Run board recognition regression test on Android emulator
+        timeout-minutes: 20
         timeout-minutes: 20
         uses: reactivecircus/android-emulator-runner@v2
         env:
@@ -48,12 +59,3 @@ jobs:
           profile: pixel_2
           disable-animations: true
           script: ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.BoardImageRecognitionTest --console=plain
-
-      - name: Upload KataGo Master APK
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: KataGo-Master-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
