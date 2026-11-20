@@ -11,6 +11,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import io.github.zhzy0077.katadroid.FloatingAssistantService
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
@@ -46,6 +52,7 @@ fun SettingsScreen(
     onBack: () -> Unit, onDiagnostics: () -> Unit, onEngines: () -> Unit,
 ) {
     val resources = LocalResources.current
+    val context = LocalContext.current
     val focus = LocalFocusManager.current
     var draftRule by rememberSaveable(rules) { mutableStateOf(rules) }
     var draftKomi by rememberSaveable(komi) { mutableStateOf(komi.toString()) }
@@ -103,6 +110,19 @@ fun SettingsScreen(
                 IntegerSetting(resources.getString(R.string.touch_offset), "px", draftOffset, 0..300,
                     listOf(0, 60, 120), "touch-offset") { draftOffset = it }
                 Hint(resources.getString(R.string.touch_hint))
+            }
+            SettingsCard {
+                SectionTitle(resources.getString(R.string.floating_assistant_title))
+                Hint(resources.getString(R.string.floating_assistant_settings_hint))
+                Button(onClick = {
+                    if (Settings.canDrawOverlays(context)) {
+                        ContextCompat.startForegroundService(context, Intent(context, FloatingAssistantService::class.java))
+                    } else {
+                        context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")))
+                    }
+                }, modifier = Modifier.fillMaxWidth().testTag("start-floating-assistant")) {
+                    Text(resources.getString(R.string.floating_assistant_enable))
+                }
             }
             SettingsCard {
                 SectionTitle(resources.getString(R.string.compute_profile))
