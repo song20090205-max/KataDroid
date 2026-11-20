@@ -43,11 +43,10 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Run board recognition regression test on Android emulator
-        timeout-minutes: 20 # Bound emulator regression; APK is already uploaded above.
+      - name: Run board recognition and search-thread regression tests
+        timeout-minutes: 20
         uses: reactivecircus/android-emulator-runner@v2
         env:
-          # Recent emulator builds reject -accel off unless TCG is explicitly allowed.
           ANDROID_I_WANT_MY_TCG: yes
         with:
           api-level: 35
@@ -55,4 +54,6 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.BoardImageRecognitionTest --console=plain
+          script: |
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.BoardImageRecognitionTest --console=plain
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest --console=plain
