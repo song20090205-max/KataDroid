@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - katago-master
+      - katago-master-v2-rebuild
   workflow_dispatch:
 permissions:
   contents: read
