@@ -34,6 +34,9 @@ jobs:
 
       - name: Run board recognition regression test on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          # Recent emulator builds reject -accel off unless TCG is explicitly allowed.
+          ANDROID_I_WANT_MY_TCG: yes
         with:
           api-level: 35
           target: google_apis
