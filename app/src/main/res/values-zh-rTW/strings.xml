@@ -21,8 +21,6 @@
     <string name="coordinates_hint">顯示字母與路數</string>
     <string name="candidates">候選變化</string>
     <string name="candidates_hint">顯示 A / B / C，長按預覽</string>
-    <string name="move_explanation">AI 棋步解析面板</string>
-    <string name="move_explanation_hint">顯示 AI 首選落點與你這手棋的勝率、目數評估比較；關閉不影響棋局分析。</string>
     <string name="candidate_color_hint">按目前行棋方相對最佳選點的勝率損失著色：接近最佳為綠，損失越大越偏黃、紅；字母保留搜尋推薦順序。</string>
     <string name="touch_offset">落點向手指上方偏移</string>
     <string name="touch_hint">按實際螢幕像素偏移。按住拖曳預覽落點，放開落子；棋盤下方留有觸控區，可落在最底一行。</string>
