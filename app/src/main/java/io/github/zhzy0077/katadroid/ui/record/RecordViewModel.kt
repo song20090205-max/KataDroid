@@ -84,6 +84,21 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /** Loads a recognized board setup passed from the screen-capture workflow. */
+    fun importSgfText(text: String) {
+        if (busy || text.isBlank()) return
+        record.pauseAutomatic()
+        operation(context.getString(R.string.import_failed)) {
+            val root = withContext(Dispatchers.Default) {
+                val roots = SgfCodec.decode(text.toByteArray(Charsets.UTF_8))
+                require(roots.size == 1) { "A recognized board must contain exactly one game" }
+                roots.single()
+            }
+            importName = context.getString(R.string.board_capture_record_name)
+            load(root)
+        }
+    }
+
     fun cancelImportChoice() { importChoices = emptyList() }
     fun chooseImport(index: Int) {
         val root = importChoices.getOrNull(index) ?: return
