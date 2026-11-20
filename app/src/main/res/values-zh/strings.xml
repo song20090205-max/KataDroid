@@ -271,4 +271,5 @@
     <string name="screen_capture_working">授權後請切換到圍棋棋盤，5 秒後擷取單張畫面…</string>
     <string name="screen_capture_complete">擷取完成，點選通知預覽畫面。</string>
     <string name="screen_capture_preview_description">你已授權擷取的螢幕畫面預覽</string>
+    <string name="screen_capture_notifications_required">請允許通知，才能開啟擷取畫面的預覽。</string>
 </resources>
