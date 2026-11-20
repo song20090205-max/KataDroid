@@ -1,5 +1,7 @@
 package io.github.zhzy0077.katadroid
 
+import android.os.Bundle
+import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.ai.edge.litert.Accelerator
 import io.github.zhzy0077.katadroid.engine.*
@@ -102,6 +104,22 @@ class OptionalModelIntegrationTest {
                 }
             }
             assertEquals(spec.id, KataGoProbe.run(context, accelerator, spec).modelId)
+
+            // Measure actual CPU search throughput on the same three fixed positions
+            // used by the bundled-model benchmark. This is a performance comparison,
+            // not a standalone playing-strength result.
+            val config = EngineConfig(spec, EngineBackend.CPU)
+            val initStart = SystemClock.elapsedRealtimeNanos()
+            KataGoSession.open(context, Accelerator.CPU, spec).use { session ->
+                val initialization = SystemClock.elapsedRealtimeNanos() - initStart
+                val benchmark = checkNotNull(SearchBenchmark.run(
+                    session, config, 100, initialization, AtomicBoolean(false)
+                ))
+                assertEquals(300, benchmark.visits)
+                InstrumentationRegistry.getInstrumentation().sendStatus(0, Bundle().apply {
+                    putString("stream", "\\nTRANSFORMER_CPU_BENCHMARK ${benchmark.json()}\\n")
+                })
+            }
         } finally {
             spec.directory!!.deleteRecursively()
             KataGoModel.refresh(context)
