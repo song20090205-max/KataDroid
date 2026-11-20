@@ -26,7 +26,6 @@
     <string name="coordinates_hint">显示字母与路数</string>
     <string name="candidates">候选变化</string>
     <string name="candidates_hint">显示 A / B / C，长按预览</string>
-    <string name="move_explanation">AI 棋步解析面板</string>
     <string name="move_explanation_hint">显示 AI 首选落点与你这手棋的胜率、目数评估比较；关闭不影响棋局分析。</string>
     <string name="candidate_color_hint">按当前行棋方相对最佳选点的胜率损失着色：接近最佳为绿，损失越大越偏黄、红；字母保留搜索推荐顺序。</string>
     <string name="touch_offset">落点向手指上方偏移</string>
