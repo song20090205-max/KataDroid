@@ -43,7 +43,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Run focused search-thread and transformer CPU tests
+      - name: Run search-thread, model-speed and transformer CPU tests
         timeout-minutes: 45
         uses: reactivecircus/android-emulator-runner@v2
         env:
@@ -58,6 +58,7 @@ jobs:
           disable-animations: true
           script: |
             ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest --console=plain
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.ModelBenchmarkTest --console=plain
 
             MODEL=tf2-b10c384-s2941M-d5872M.kdmodel
             URL=https://github.com/zhzy0077/KataDroid/releases/download/v1.1.0-rc.1/$MODEL
