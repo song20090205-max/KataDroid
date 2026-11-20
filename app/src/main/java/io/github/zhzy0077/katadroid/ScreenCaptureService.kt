@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
@@ -50,7 +51,7 @@ class ScreenCaptureService : Service() {
         }
 
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildWorkingNotification())
+        startForeground(NOTIFICATION_ID, buildWorkingNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
         try {
             val manager = getSystemService(MediaProjectionManager::class.java)
             projection = manager.getMediaProjection(resultCode, resultData)
