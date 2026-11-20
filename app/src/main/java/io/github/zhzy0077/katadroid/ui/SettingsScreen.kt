@@ -11,12 +11,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import android.app.Activity
+import android.media.projection.MediaProjectionManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import io.github.zhzy0077.katadroid.FloatingAssistantService
+import io.github.zhzy0077.katadroid.ScreenCaptureService
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
@@ -54,6 +59,16 @@ fun SettingsScreen(
     val resources = LocalResources.current
     val context = LocalContext.current
     val focus = LocalFocusManager.current
+    val screenCaptureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val permissionData = result.data
+        if (result.resultCode == Activity.RESULT_OK && permissionData != null) {
+            val captureIntent = Intent(context, ScreenCaptureService::class.java).apply {
+                putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, result.resultCode)
+                putExtra(ScreenCaptureService.EXTRA_RESULT_DATA, permissionData)
+            }
+            ContextCompat.startForegroundService(context, captureIntent)
+        }
+    }
     var draftRule by rememberSaveable(rules) { mutableStateOf(rules) }
     var draftKomi by rememberSaveable(komi) { mutableStateOf(komi.toString()) }
     var draftVisits by rememberSaveable(settings.maxVisits) { mutableStateOf(settings.maxVisits.toString()) }
@@ -122,6 +137,12 @@ fun SettingsScreen(
                     }
                 }, modifier = Modifier.fillMaxWidth().testTag("start-floating-assistant")) {
                     Text(resources.getString(R.string.floating_assistant_enable))
+                }
+                Button(onClick = {
+                    val projectionManager = context.getSystemService(MediaProjectionManager::class.java)
+                    screenCaptureLauncher.launch(projectionManager.createScreenCaptureIntent())
+                }, modifier = Modifier.fillMaxWidth().testTag("capture-screen-once")) {
+                    Text(resources.getString(R.string.screen_capture_start))
                 }
             }
             SettingsCard {
