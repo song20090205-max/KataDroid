@@ -3,7 +3,7 @@ package io.github.zhzy0077.katadroid
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.zhzy0077.katadroid.engine.AnalysisPosition
-import io.github.zhzy0077.katadroid.engine.BoardPoint
+import io.github.zhzy0077.katadroid.ui.record.BoardPoint
 import io.github.zhzy0077.katadroid.engine.BoardSnapshot
 import io.github.zhzy0077.katadroid.engine.KataGoModel
 import io.github.zhzy0077.katadroid.engine.KataGoSession
