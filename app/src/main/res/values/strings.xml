@@ -273,7 +273,7 @@
     <string name="screen_capture_preview_description">Preview of the screen frame you approved for capture</string>
     <string name="screen_capture_notifications_required">Allow notifications to open the captured screen preview.</string>
     <string name="board_capture_start">Calibrate Go board</string>
-    <string name="board_capture_corner_hint">Tap the four outer grid intersections in order: top-left, top-right, bottom-right, bottom-left.</string>
+    <string name="board_capture_corner_hint">Tap any four outer grid intersections. The app will sort their positions automatically.</string>
     <string name="board_capture_corner_progress">Corners selected: %1$d / 4</string>
     <string name="board_capture_reset">Reset</string>
     <string name="board_capture_recognize">Recognize stones</string>
