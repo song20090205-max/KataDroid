@@ -261,8 +261,8 @@
     <string name="floating_assistant_enable">Start / configure floating assistant</string>
     <string name="floating_assistant_bubble">Go</string>
     <string name="floating_assistant_description">Floating Go assistant. Tap to expand.</string>
-    <string name="floating_assistant_prototype">Floating assistant prototype\nThe overlay is running. The next milestone adds user-authorized screen capture, board recognition and KataGo position analysis.</string>
-    <string name="floating_assistant_close_panel">Collapse panel</string>
+    <string name="floating_assistant_prototype">The floating assistant is running. Open KataGo Master here; cross-app board capture and recognition are not connected yet.</string>
+    <string name="floating_assistant_open_app">Open KataGo Master</string>\n    <string name="floating_assistant_close_panel">Collapse panel</string>
     <string name="floating_assistant_stop">Stop floating assistant</string>
     <string name="floating_assistant_notification_title">KataGo floating assistant</string>
     <string name="floating_assistant_notification_text">The floating button is visible. Tap to return to the app.</string>
