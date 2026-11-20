@@ -36,6 +36,7 @@ class ScreenCaptureService : Service() {
     private var worker: HandlerThread? = null
     private var handler: Handler? = null
     private val captured = AtomicBoolean(false)
+    private val captureArmed = AtomicBoolean(false)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val resultCode = intent?.getIntExtra(EXTRA_RESULT_CODE, 0) ?: 0
@@ -72,7 +73,7 @@ class ScreenCaptureService : Service() {
                 if (captured.get()) return@setOnImageAvailableListener
                 val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
                 try {
-                    if (captured.compareAndSet(false, true)) saveFrame(image, width, height)
+                    if (captureArmed.get() && captured.compareAndSet(false, true)) saveFrame(image, width, height)
                 } finally {
                     image.close()
                 }
@@ -88,6 +89,7 @@ class ScreenCaptureService : Service() {
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 imageReader!!.surface, null, handler
             )
+            handler!!.postDelayed({ captureArmed.set(true) }, CAPTURE_DELAY_MS)
             handler!!.postDelayed({
                 if (!captured.get()) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
@@ -184,6 +186,7 @@ class ScreenCaptureService : Service() {
         private const val CHANNEL_ID = "screen_capture"
         private const val NOTIFICATION_ID = 4108
         private const val PREVIEW_FILE = "screen_capture_preview.jpg"
-        private const val CAPTURE_TIMEOUT_MS = 5000L
+        private const val CAPTURE_DELAY_MS = 5000L
+        private const val CAPTURE_TIMEOUT_MS = 12000L
     }
 }
