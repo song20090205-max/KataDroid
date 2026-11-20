@@ -229,6 +229,13 @@ private class BoardReviewView(
         style = Paint.Style.STROKE
         strokeWidth = 1.5f
     }
+    private val uncertainPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(255, 190, 40)
+        style = Paint.Style.FILL
+        textAlign = Paint.Align.CENTER
+        textSize = 24f
+        typeface = Typeface.DEFAULT_BOLD
+    }
     private var boardRect = android.graphics.RectF()
     private var spacing = 0f
 
@@ -268,6 +275,7 @@ private class BoardReviewView(
                     canvas.drawCircle(x, y, radius, whitePaint)
                     canvas.drawCircle(x, y, radius, outlinePaint)
                 }
+                '?' -> canvas.drawText("?", x, y + uncertainPaint.textSize * 0.34f, uncertainPaint)
             }
         }
     }
@@ -286,6 +294,7 @@ private class BoardReviewView(
             kotlin.math.abs(event.y - y) > spacing * 0.48f) return true
         val nextRows = board.rows.map { it.toMutableList() }.toMutableList()
         nextRows[row][col] = when (nextRows[row][col]) {
+            '?' -> 'X'
             '.' -> 'X'
             'X' -> 'O'
             'O' -> '.'
@@ -340,26 +349,47 @@ private object GoBoardImageRecognizer {
         require(matrix.setPolyToPoly(source, 0, destination, 0, 4))
         val warped = Bitmap.createBitmap(OUTPUT_SIZE, OUTPUT_SIZE, Bitmap.Config.ARGB_8888)
         Canvas(warped).drawBitmap(bitmap, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
-        val radius = 4
+        // Compare a compact patch at the intersection with a surrounding ring.
+        // This adapts to board color and exposure instead of using one global threshold.
+        fun luminance(x: Int, y: Int): Int {
+            val color = warped.getPixel(
+                x.coerceIn(0, OUTPUT_SIZE - 1),
+                y.coerceIn(0, OUTPUT_SIZE - 1)
+            )
+            return (0.299 * Color.red(color) + 0.587 * Color.green(color) +
+                0.114 * Color.blue(color)).roundToInt()
+        }
+        fun median(values: MutableList<Int>): Int {
+            values.sort()
+            return values[values.size / 2]
+        }
         val rows = List(19) { row ->
             List(19) { column ->
                 val cx = (GRID_MARGIN + column * GRID_STEP).roundToInt()
                 val cy = (GRID_MARGIN + row * GRID_STEP).roundToInt()
-                val values = ArrayList<Int>(81)
-                for (dy in -radius..radius) for (dx in -radius..radius) {
-                    val x = (cx + dx).coerceIn(0, OUTPUT_SIZE - 1)
-                    val y = (cy + dy).coerceIn(0, OUTPUT_SIZE - 1)
-                    val color = warped.getPixel(x, y)
-                    val red = Color.red(color)
-                    val green = Color.green(color)
-                    val blue = Color.blue(color)
-                    values += (0.299 * red + 0.587 * green + 0.114 * blue).roundToInt()
+                val center = ArrayList<Int>()
+                val surrounding = ArrayList<Int>()
+                val innerRadius = GRID_STEP * 0.20f
+                val ringInner = GRID_STEP * 0.31f
+                val ringOuter = GRID_STEP * 0.44f
+                val scanRadius = ringOuter.roundToInt()
+                for (dy in -scanRadius..scanRadius) for (dx in -scanRadius..scanRadius) {
+                    val distance = kotlin.math.sqrt((dx * dx + dy * dy).toFloat())
+                    if (distance <= innerRadius) {
+                        center += luminance(cx + dx, cy + dy)
+                    } else if (distance >= ringInner && distance <= ringOuter) {
+                        surrounding += luminance(cx + dx, cy + dy)
+                    }
                 }
-                values.sort()
-                val median = values[values.size / 2]
+                val centerMedian = median(center)
+                val backgroundMedian = median(surrounding)
+                val contrast = centerMedian - backgroundMedian
                 when {
-                    median < 82 -> 'X'
-                    median > 218 -> 'O'
+                    contrast <= -48 && centerMedian < 125 -> 'X'
+                    contrast >= 24 && centerMedian > 145 -> 'O'
+                    // Borderline patches are exposed for manual review.
+                    contrast <= -27 && centerMedian < 145 -> '?'
+                    contrast >= 13 && centerMedian > 135 -> '?'
                     else -> '.'
                 }
             }
