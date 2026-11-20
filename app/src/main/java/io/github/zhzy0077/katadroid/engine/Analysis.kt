@@ -68,6 +68,8 @@ data class AnalysisPosition(
     }
 }
 
+enum class ReplyRisk { NONE, LOW_CONFIDENCE, WARNING }
+
 data class AnalysisReply(
     val move: Int,
     val visits: Int,
@@ -75,6 +77,13 @@ data class AnalysisReply(
     val winRateSwing: Float,
     val opponentLead: Float,
 ) {
+    // A large swing from a tiny branch is a warning to verify, not a confirmed refutation.
+    fun riskLevel(): ReplyRisk = when {
+        winRateSwing < 5f -> ReplyRisk.NONE
+        visits < 20 -> ReplyRisk.LOW_CONFIDENCE
+        else -> ReplyRisk.WARNING
+    }
+
     fun json() = JSONObject().put("move", move).put("visits", visits)
         .put("opponentWinRate", opponentWinRate)
         .put("winRateSwing", winRateSwing)
