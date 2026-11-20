@@ -68,7 +68,16 @@ class FloatingAssistantService : Service() {
         panel.addView(TextView(this).apply {
             text = getString(R.string.floating_assistant_prototype)
             setTextColor(0xFFFFFFFF.toInt())
-            textSize = 13f
+            textSize = 12f
+        })
+        panel.addView(Button(this).apply {
+            text = getString(R.string.floating_assistant_open_app)
+            setOnClickListener {
+                packageManager.getLaunchIntentForPackage(packageName)?.let { launch ->
+                    launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    startActivity(launch)
+                }
+            }
         })
         panel.addView(Button(this).apply {
             text = getString(R.string.floating_assistant_close_panel)
@@ -123,9 +132,13 @@ class FloatingAssistantService : Service() {
                     val dy = (event.rawY - downY).toInt()
                     if (kotlin.math.abs(dx) + kotlin.math.abs(dy) > dp(6)) dragged = true
                     if (dragged) {
-                        p.x = (startX - dx).coerceAtLeast(0)
-                        p.y = (startY + dy).coerceAtLeast(0)
-                        overlay?.let { windowManager.updateViewLayout(it, p) }
+                        val view = overlay
+                        val screen = resources.displayMetrics
+                        val maxX = (screen.widthPixels - (view?.width ?: dp(56))).coerceAtLeast(0)
+                        val maxY = (screen.heightPixels - (view?.height ?: dp(56))).coerceAtLeast(0)
+                        p.x = (startX - dx).coerceIn(0, maxX)
+                        p.y = (startY + dy).coerceIn(0, maxY)
+                        view?.let { windowManager.updateViewLayout(it, p) }
                     }
                     return true
                 }
