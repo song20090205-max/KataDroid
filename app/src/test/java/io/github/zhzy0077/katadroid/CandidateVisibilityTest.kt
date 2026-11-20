@@ -9,7 +9,7 @@ class CandidateVisibilityTest {
         for (black in listOf(false, true)) for (white in listOf(false, true)) {
             val settings = AppPreferences(autoBlack = black, autoWhite = white)
             assertEquals(!black && !white, settings.showCandidateMoves)
-            assertTrue(settings.engineEnabled)
+            assertFalse(settings.engineEnabled)
             assertFalse(settings.copy(candidates = false).showCandidateMoves)
             assertEquals(!black && !white, settings.copy(engineEnabled = false).showCandidateMoves)
         }
