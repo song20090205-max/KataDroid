@@ -256,7 +256,7 @@
     <string name="analysis_explain_better">Move %1$s currently evaluates about %2$s win-rate percentage points better than the previous top choice (score-lead gap: %3$s points). Increase visits to confirm because search estimates can vary.</string>
     <string name="analysis_explain_preview">Preview top line</string>
     <string name="floating_assistant_title">Floating assistant</string>
-    <string name="floating_assistant_settings_hint">Show a draggable floating control over other apps. This prototype does not capture the screen or read game boards yet.</string>
+    <string name="floating_assistant_settings_hint">Show a draggable floating control over other apps. Screen capture is a separate, user-approved one-shot action; board recognition is not ready yet.</string>
     <string name="floating_assistant_enable">Enable floating assistant</string>
     <string name="floating_assistant_bubble">KataGo</string>
     <string name="floating_assistant_description">KataGo floating assistant. Tap to open controls, drag to move.</string>
@@ -268,7 +268,7 @@
     <string name="floating_assistant_notification_text">The floating control is visible. Tap to return to the app.</string>
     <string name="screen_capture_start">Capture screen once (system permission required)</string>
     <string name="screen_capture_title">KataGo screen capture</string>
-    <string name="screen_capture_working">Capturing one frame after your approval…</string>
+    <string name="screen_capture_working">Switch to the Go board now. One frame is captured after 5 seconds…</string>
     <string name="screen_capture_complete">Capture complete. Tap to preview the image.</string>
     <string name="screen_capture_preview_description">Preview of the screen frame you approved for capture</string>
 </resources>
