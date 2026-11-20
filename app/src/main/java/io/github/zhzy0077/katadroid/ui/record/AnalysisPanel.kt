@@ -93,7 +93,11 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
                 val replies = candidate.opponentReplies.map { reply ->
                     val move = BoardPoint.fromIndex(reply.move)?.label ?: resources.getString(R.string.pass_move)
                     val swing = if (reply.winRateSwing >= 0f) "+" else ""
-                    val risk = if (reply.winRateSwing >= 5f) "｜需留意" else ""
+                    val risk = when (reply.riskLevel()) {
+                        io.github.zhzy0077.katadroid.engine.ReplyRisk.WARNING -> "｜需留意"
+                        io.github.zhzy0077.katadroid.engine.ReplyRisk.LOW_CONFIDENCE -> "｜疑似威脅，樣本少"
+                        io.github.zhzy0077.katadroid.engine.ReplyRisk.NONE -> ""
+                    }
                     "$move（對手勝率評估 $swing${reply.winRateSwing.oneDecimal()} 個百分點、領先 ${reply.opponentLead.oneDecimal()} 目、${reply.visits}訪$risk）"
                 }.ifEmpty {
                     listOfNotNull(candidate.pv.getOrNull(1)?.let { reply ->
