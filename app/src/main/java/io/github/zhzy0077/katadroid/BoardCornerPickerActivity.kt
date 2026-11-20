@@ -196,8 +196,11 @@ private data class RecognizedBoard(val rows: List<List<Char>>) {
                 }
             }
         }
-        return "(;GM[1]FF[4]CA[UTF-8]SZ[19]RU[Chinese]KM[7.5]PL[$nextPlayer]" +
-            "AB${coordinates('X')}AW${coordinates('O')})"
+        val black = coordinates('X')
+        val white = coordinates('O')
+        return "(;GM[1]FF[4]CA[UTF-8]SZ[19]RU[chinese]KM[7.5]PL[$nextPlayer]" +
+            (if (black.isNotEmpty()) "AB$black" else "") +
+            (if (white.isNotEmpty()) "AW$white" else "") + ")"
     }
 }
 
