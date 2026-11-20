@@ -14,7 +14,7 @@ enum class ComputeProfile(val model: KataGoModel, val visits: Int, val searchThr
     BALANCED(KataGoModel.B6, 2000, 2),
     HIGH_PERFORMANCE(KataGoModel.B10, 5000, 4);
     companion object {
-        fun fromId(id: String?) = entries.firstOrNull { it.name == id } ?: POWER_SAVING
+        fun fromId(id: String?) = entries.firstOrNull { it.name == id } ?: HIGH_PERFORMANCE
     }
 }
 
@@ -29,9 +29,8 @@ data class AppPreferences(
     val rules: GoRules = GoRules.CHINESE,
     val komi: Float = 7.5f,
     val model: KataGoModel = KataGoModel.B6,
-    val backend: EngineBackend = EngineBackend.CPU,
-    val showMoveExplanation: Boolean = true,
-    val computeProfile: ComputeProfile = ComputeProfile.POWER_SAVING,
+    val backend: EngineBackend = EngineBackend.AUTO,
+    val computeProfile: ComputeProfile = ComputeProfile.HIGH_PERFORMANCE,
 ) {
     val engineConfig get() = EngineConfig(model, backend, computeProfile.searchThreads)
     fun automatic(color: Int) = if (color == 1) autoBlack else autoWhite
@@ -45,7 +44,6 @@ data class AppPreferences(
         putBoolean("auto_black", autoBlack); putBoolean("auto_white", autoWhite)
         putString("rules", rules.id); putFloat("komi", komi)
         putString("model", model.id); putString("backend", backend.name)
-        putBoolean("show_move_explanation", showMoveExplanation)
         putString("compute_profile", computeProfile.name)
     }
 
@@ -77,8 +75,8 @@ data class AppPreferences(
                     putInt("compute_profile_version", 3)
                 }
             }
-            // Low-memory diagnostic profile: B6, CPU, one search thread and 500 visits.
-            // This is intentionally conservative after engine initialization caused app exits.
+            // Previous diagnostic builds forced a low-load profile. Restore the requested high-performance defaults on upgrade,
+            // but keep the engine disabled until the user explicitly starts it.
             if (p.getInt("compute_profile_version", 0) < 4) {
                 p.edit {
                     putBoolean("engine_enabled", false)
@@ -89,6 +87,16 @@ data class AppPreferences(
                     putInt("compute_profile_version", 4)
                 }
             }
+            if (p.getInt("compute_profile_version", 0) < 5) {
+                p.edit {
+                    putBoolean("engine_enabled", false)
+                    putString("model", KataGoModel.B10.id)
+                    putString("backend", EngineBackend.AUTO.name)
+                    putString("compute_profile", ComputeProfile.HIGH_PERFORMANCE.name)
+                    putInt("max_visits", 5000)
+                    putInt("compute_profile_version", 5)
+                }
+            }
             val profile = ComputeProfile.fromId(p.getString("compute_profile", null))
             return AppPreferences(p.getBoolean("coordinates", true), p.getBoolean("candidates", true),
                 p.getBoolean("engine_enabled", true),
@@ -97,7 +105,7 @@ data class AppPreferences(
                 runCatching { GoRules.fromId(p.getString("rules", "chinese")!!) }.getOrDefault(GoRules.CHINESE),
                 p.getFloat("komi", 7.5f).takeIf(::validKomi) ?: 7.5f,
                 KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)),
-                p.getBoolean("show_move_explanation", true), profile)
+                profile)
         }
     }
 }
