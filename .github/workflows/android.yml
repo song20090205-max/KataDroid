@@ -44,7 +44,7 @@ jobs:
           retention-days: 14
 
       - name: Run board recognition regression test on Android emulator
-        timeout-minutes: 20
+        timeout-minutes: 20 # Bound emulator regression; APK is already uploaded above.
         uses: reactivecircus/android-emulator-runner@v2
         env:
           # Recent emulator builds reject -accel off unless TCG is explicitly allowed.
