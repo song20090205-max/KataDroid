@@ -38,6 +38,11 @@ class AnalysisReplyTest {
         assertEquals(56.25f, parsedReply.opponentWinRate, 0.001f)
         assertEquals(6.25f, parsedReply.winRateSwing, 0.001f)
         assertEquals(3.5f, parsedReply.opponentLead, 0.001f)
+        assertTrue(parsedReply.riskLevel() == io.github.zhzy0077.katadroid.engine.ReplyRisk.WARNING)
+        val lowSample = parsedReply.copy(visits = 8)
+        assertTrue(lowSample.riskLevel() == io.github.zhzy0077.katadroid.engine.ReplyRisk.LOW_CONFIDENCE)
+        val smallSwing = parsedReply.copy(winRateSwing = 2.0f)
+        assertTrue(smallSwing.riskLevel() == io.github.zhzy0077.katadroid.engine.ReplyRisk.NONE)
         assertTrue(parsed.candidates.single().opponentReplies.isNotEmpty())
     }
 
