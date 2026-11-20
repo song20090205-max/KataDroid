@@ -434,6 +434,7 @@ static jstring analyzeSearch(JNIEnv* env, jlong handle, jint visits, jint millis
         e.search->getAnalysisData(*child, replies, 3, false, 5, false);
         for (const auto& reply : replies) {
           if (opponentReplies.size() >= 3) break;
+          if (reply.numVisits <= 0) continue;
           // getAnalysisData(node) only reports legal children of that node.
           opponentReplies.push_back({{"move", point(reply.move)}, {"visits", reply.numVisits}});
         }
