@@ -272,4 +272,16 @@
     <string name="screen_capture_complete">Capture complete. Tap to preview the image.</string>
     <string name="screen_capture_preview_description">Preview of the screen frame you approved for capture</string>
     <string name="screen_capture_notifications_required">Allow notifications to open the captured screen preview.</string>
+    <string name="board_capture_start">Calibrate Go board</string>
+    <string name="board_capture_corner_hint">Tap the four outer grid intersections in order: top-left, top-right, bottom-right, bottom-left.</string>
+    <string name="board_capture_corner_progress">Corners selected: %1$d / 4</string>
+    <string name="board_capture_reset">Reset</string>
+    <string name="board_capture_recognize">Recognize stones</string>
+    <string name="board_capture_failed">Could not calibrate this board. Try selecting the four outer intersections again.</string>
+    <string name="board_capture_result">Detected black: %1$d, white: %2$d, uncertain: %3$d. Review the board before continuing.</string>
+    <string name="board_capture_analyze">Analyze this position</string>
+    <string name="board_capture_next_player">Which side is to play next?</string>
+    <string name="black_to_play">Black to play</string>
+    <string name="white_to_play">White to play</string>
+    <string name="board_capture_record_name">Screen-recognized Go position</string>
 </resources>
