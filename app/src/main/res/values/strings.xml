@@ -266,4 +266,9 @@
     <string name="floating_assistant_stop">Stop floating assistant</string>
     <string name="floating_assistant_notification_title">KataGo floating assistant</string>
     <string name="floating_assistant_notification_text">The floating control is visible. Tap to return to the app.</string>
+    <string name="screen_capture_start">Capture screen once (system permission required)</string>
+    <string name="screen_capture_title">KataGo screen capture</string>
+    <string name="screen_capture_working">Capturing one frame after your approval…</string>
+    <string name="screen_capture_complete">Capture complete. Tap to preview the image.</string>
+    <string name="screen_capture_preview_description">Preview of the screen frame you approved for capture</string>
 </resources>
