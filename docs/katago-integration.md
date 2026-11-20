@@ -61,7 +61,10 @@ workers. The panel reports each reply's visits, the estimated change in the
 opponent's win rate (percentage points) relative to the position immediately
 after our candidate, and the estimated lead from the opponent's perspective.
 A swing of at least five percentage points is marked for attention as a
-heuristic, not a guaranteed tactical refutation.
+heuristic, not a guaranteed tactical refutation. If the reply has fewer than
+20 visits, the UI labels it as a low-sample suspected threat instead of a
+confirmed attention warning; this visit threshold is a conservative display
+rule, not a statistical confidence interval.
 
 This is intentionally labelled as searched replies, not all legal replies.
 Low-visit branches remain uncertain, and an opponent's unusual move can still
