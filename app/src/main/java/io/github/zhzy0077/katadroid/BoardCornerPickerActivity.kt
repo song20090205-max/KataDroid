@@ -337,6 +337,20 @@ private object GoBoardImageRecognizer {
 
     fun recognize(bitmap: Bitmap, corners: List<PointF>): RecognizedBoard {
         require(corners.size == 4)
+        // Reject crossed, duplicated or nearly collinear corner selections before
+        // applying a perspective transform; these produce shifted/mirrored stones.
+        fun cross(a: PointF, b: PointF, c: PointF): Float =
+            (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x)
+        val turns = corners.indices.map { i ->
+            cross(corners[i], corners[(i + 1) % 4], corners[(i + 2) % 4])
+        }
+        require(turns.all { it > 1f }) { "Corners must be selected clockwise from top-left" }
+        val edgeLengths = corners.indices.map { i ->
+            val a = corners[i]
+            val b = corners[(i + 1) % 4]
+            kotlin.math.hypot((b.x - a.x).toDouble(), (b.y - a.y).toDouble())
+        }
+        require(edgeLengths.all { it >= 40.0 }) { "Selected board corners are too close" }
         val source = FloatArray(8)
         corners.forEachIndexed { index, point ->
             source[index * 2] = point.x
@@ -372,11 +386,11 @@ private object GoBoardImageRecognizer {
                 val center = ArrayList<Int>()
                 val background = ArrayList<Int>()
                 val sectors = Array(8) { ArrayList<Int>() }
-                val coreRadius = GRID_STEP * 0.13f
-                val ringInner = GRID_STEP * 0.19f
-                val ringOuter = GRID_STEP * 0.35f
-                val backgroundInner = GRID_STEP * 0.52f
-                val backgroundOuter = GRID_STEP * 0.67f
+                val coreRadius = GRID_STEP * 0.18f
+                val ringInner = GRID_STEP * 0.21f
+                val ringOuter = GRID_STEP * 0.43f
+                val backgroundInner = GRID_STEP * 0.56f
+                val backgroundOuter = GRID_STEP * 0.74f
                 val scanRadius = backgroundOuter.roundToInt()
                 for (dy in -scanRadius..scanRadius) for (dx in -scanRadius..scanRadius) {
                     val distance = kotlin.math.sqrt((dx * dx + dy * dy).toFloat())
