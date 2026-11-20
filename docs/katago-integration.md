@@ -52,6 +52,23 @@ so their runtimes cannot overlap. Automatic moves require a fresh completed
 result for the exact current position, selected model/backend and visit budget.
 A deeper saved result can remain visible while a smaller new search runs.
 
+## Opponent reply inspection
+
+For each displayed root candidate, the JNI adapter looks up that candidate's
+already-expanded child node and reads up to three searched opponent replies from
+the same MCTS tree. It does not start extra engine sessions or neural-network
+workers. The panel reports each reply's visits, the estimated change in the
+opponent's win rate (percentage points) relative to the position immediately
+after our candidate, and the estimated lead from the opponent's perspective.
+A swing of at least five percentage points is marked for attention as a
+heuristic, not a guaranteed tactical refutation.
+
+This is intentionally labelled as searched replies, not all legal replies.
+Low-visit branches remain uncertain, and an opponent's unusual move can still
+be missed. The next improvement should prioritize tactical verification and
+coverage of low-prior forcing moves, then measure whether those alerts predict
+real losses on a fixed set of test positions.
+
 ## State, cache and backend selection
 
 Position identity includes complete history, explicit colors/PL, root setup,
