@@ -255,4 +255,15 @@
     <string name="analysis_explain_blunder">Move %1$s is estimated to lose about %2$s win-rate percentage points compared with the previous top choice (score-lead gap: %3$s points), a large evaluation drop.</string>
     <string name="analysis_explain_better">Move %1$s currently evaluates about %2$s win-rate percentage points better than the previous top choice (score-lead gap: %3$s points). Increase visits to confirm because search estimates can vary.</string>
     <string name="analysis_explain_preview">Preview top line</string>
+    <string name="floating_assistant_title">Floating assistant</string>
+    <string name="floating_assistant_settings_hint">Show a draggable floating control over other apps. This prototype does not capture the screen or read game boards yet.</string>
+    <string name="floating_assistant_enable">Enable floating assistant</string>
+    <string name="floating_assistant_bubble">KataGo</string>
+    <string name="floating_assistant_description">KataGo floating assistant. Tap to open controls, drag to move.</string>
+    <string name="floating_assistant_prototype">Floating assistant prototype · screen capture and board recognition are not enabled yet.</string>
+    <string name="floating_assistant_open_app">Open KataGo Master</string>
+    <string name="floating_assistant_close_panel">Collapse</string>
+    <string name="floating_assistant_stop">Stop floating assistant</string>
+    <string name="floating_assistant_notification_title">KataGo floating assistant</string>
+    <string name="floating_assistant_notification_text">The floating control is visible. Tap to return to the app.</string>
 </resources>
