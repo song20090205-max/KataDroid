@@ -398,14 +398,18 @@ private object GoBoardImageRecognizer {
                 val sectorMedians = sectors.mapNotNull { values ->
                     if (values.isEmpty()) null else median(values)
                 }
-                val darkSectors = sectorMedians.count { it <= backgroundMedian - 28 }
-                val brightSectors = sectorMedians.count { it >= backgroundMedian - 12 }
+                val centerContrast = centerMedian - backgroundMedian
+                val darkSectors = sectorMedians.count { it <= backgroundMedian - 24 }
+                // White stones must be brighter than the surrounding wooden board.
+                // The previous test used "background - 12", which made ordinary
+                // empty-board pixels look like white stones in many lighting conditions.
+                val brightSectors = sectorMedians.count { it >= backgroundMedian + 18 }
                 when {
-                    // A real stone should occupy most directions around the point;
-                    // an empty grid crossing normally darkens only four directions.
-                    centerMedian < 125 && darkSectors >= 6 -> 'X'
-                    centerMedian > 148 && brightSectors >= 6 -> 'O'
-                    darkSectors >= 5 || brightSectors >= 5 -> '?'
+                    // Require both center contrast and a mostly circular footprint.
+                    centerContrast <= -38 && darkSectors >= 5 -> 'X'
+                    centerContrast >= 28 && brightSectors >= 5 -> 'O'
+                    centerContrast <= -20 && darkSectors >= 4 -> '?'
+                    centerContrast >= 14 && brightSectors >= 4 -> '?'
                     else -> '.'
                 }
             }
