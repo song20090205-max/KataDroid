@@ -29,6 +29,7 @@
         </service>
         <service android:name=".ScreenCaptureService" android:exported="false" android:foregroundServiceType="mediaProjection" />
         <activity android:name=".ScreenCapturePreviewActivity" android:exported="false" android:theme="@style/Theme.KataDroid" />
+        <activity android:name=".BoardCornerPickerActivity" android:exported="false" android:theme="@style/Theme.KataDroid" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
