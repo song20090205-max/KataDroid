@@ -32,6 +32,16 @@ jobs:
       - name: Build and check CPU-capable APK
         run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
 
+      - name: Run board recognition regression test on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.BoardImageRecognitionTest --console=plain
+
       - name: Upload KataGo Master APK
         if: success()
         uses: actions/upload-artifact@v4
