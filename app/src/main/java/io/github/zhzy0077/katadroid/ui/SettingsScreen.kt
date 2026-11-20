@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.zhzy0077.katadroid.R
 import io.github.zhzy0077.katadroid.engine.GoRules
+import io.github.zhzy0077.katadroid.ui.ComputeProfile
 import io.github.zhzy0077.katadroid.engine.MAX_VISITS
 import io.github.zhzy0077.katadroid.engine.validKomi
 import io.github.zhzy0077.katadroid.ui.theme.GoColors
@@ -54,13 +55,14 @@ fun SettingsScreen(
     var autoWhite by rememberSaveable(settings.autoWhite) { mutableStateOf(settings.autoWhite) }
     var coordinates by rememberSaveable(settings.coordinates) { mutableStateOf(settings.coordinates) }
     var candidates by rememberSaveable(settings.candidates) { mutableStateOf(settings.candidates) }
+    var computeProfile by rememberSaveable(settings.computeProfile) { mutableStateOf(settings.computeProfile) }
     val parsedKomi = draftKomi.toFloatOrNull()?.takeIf(::validKomi)
     val parsedVisits = draftVisits.toIntOrNull()?.takeIf { it in 1..MAX_VISITS }
     val parsedOffset = draftOffset.toIntOrNull()?.takeIf { it in 0..300 }
     val valid = parsedKomi != null && parsedVisits != null && parsedOffset != null
     val changed = parsedKomi != komi || draftRule != rules || parsedVisits != settings.maxVisits ||
         parsedOffset != settings.touchOffsetPx || autoBlack != settings.autoBlack || autoWhite != settings.autoWhite ||
-        coordinates != settings.coordinates || candidates != settings.candidates
+        coordinates != settings.coordinates || candidates != settings.candidates || computeProfile != settings.computeProfile
 
     Column(Modifier.fillMaxSize().imePadding().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)).testTag("settings-screen")) {
         PageHeader(resources.getString(R.string.settings), onBack)
@@ -103,6 +105,27 @@ fun SettingsScreen(
                 Hint(resources.getString(R.string.touch_hint))
             }
             SettingsCard {
+                SectionTitle(resources.getString(R.string.compute_profile))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ComputeProfile.entries.forEach { profile ->
+                        FilterChip(
+                            selected = computeProfile == profile,
+                            onClick = { computeProfile = profile },
+                            label = { Text(resources.getString(when (profile) {
+                                ComputeProfile.POWER_SAVING -> R.string.compute_power_saving
+                                ComputeProfile.BALANCED -> R.string.compute_balanced
+                                ComputeProfile.HIGH_PERFORMANCE -> R.string.compute_high_performance
+                            })) },
+                            modifier = Modifier.fillMaxWidth().testTag("compute-" + profile.name.lowercase())
+                        )
+                    }
+                }
+                Hint(resources.getString(when (computeProfile) {
+                    ComputeProfile.POWER_SAVING -> R.string.compute_power_saving_hint
+                    ComputeProfile.BALANCED -> R.string.compute_balanced_hint
+                    ComputeProfile.HIGH_PERFORMANCE -> R.string.compute_high_performance_hint
+                }))
+                HorizontalDivider(color = GoColors.Outline)
                 SectionTitle(resources.getString(R.string.engine))
                 SettingsLink(resources.getString(R.string.engines_models), resources.getString(R.string.engines_hint), "open-engines", onEngines)
                 HorizontalDivider(color = GoColors.Outline)
@@ -117,7 +140,7 @@ fun SettingsScreen(
                 Button(onClick = {
                     focus.clearFocus()
                     onApply(settings.copy(maxVisits = checkNotNull(parsedVisits), touchOffsetPx = checkNotNull(parsedOffset),
-                        autoBlack = autoBlack, autoWhite = autoWhite, coordinates = coordinates, candidates = candidates ),
+                        autoBlack = autoBlack, autoWhite = autoWhite, coordinates = coordinates, candidates = candidates, computeProfile = computeProfile),
                         draftRule, checkNotNull(parsedKomi))
                 }, enabled = changed && valid && !busy, modifier = Modifier.fillMaxWidth().testTag("apply-settings")) {
                     Text(resources.getString(if (busy) R.string.applying else if (changed) R.string.apply_settings else R.string.settings_saved))
