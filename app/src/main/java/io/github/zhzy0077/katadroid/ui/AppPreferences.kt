@@ -9,6 +9,16 @@ import io.github.zhzy0077.katadroid.engine.EngineBackend
 import io.github.zhzy0077.katadroid.engine.EngineConfig
 import io.github.zhzy0077.katadroid.engine.KataGoModel
 
+enum class ComputeProfile(val searchThreads: Int) {
+    POWER_SAVING(1),
+    BALANCED(2),
+    HIGH_PERFORMANCE(4);
+
+    companion object {
+        fun fromId(id: String?) = entries.firstOrNull { it.name == id } ?: POWER_SAVING
+    }
+}
+
 data class AppPreferences(
     val coordinates: Boolean = true,
     val candidates: Boolean = true,
@@ -21,8 +31,9 @@ data class AppPreferences(
     val komi: Float = 7.5f,
     val model: KataGoModel = KataGoModel.B6,
     val backend: EngineBackend = EngineBackend.AUTO,
+    val computeProfile: ComputeProfile = ComputeProfile.POWER_SAVING,
 ) {
-    val engineConfig get() = EngineConfig(model, backend)
+    val engineConfig get() = EngineConfig(model, backend, computeProfile.searchThreads)
     fun automatic(color: Int) = if (color == 1) autoBlack else autoWhite
     val hasAutomaticPlayer get() = autoBlack || autoWhite
     val showCandidateMoves get() = candidates && !hasAutomaticPlayer
@@ -34,6 +45,7 @@ data class AppPreferences(
         putBoolean("auto_black", autoBlack); putBoolean("auto_white", autoWhite)
         putString("rules", rules.id); putFloat("komi", komi)
         putString("model", model.id); putString("backend", backend.name)
+        putString("compute_profile", computeProfile.name)
     }
 
     companion object {
@@ -45,7 +57,8 @@ data class AppPreferences(
                 p.getBoolean("auto_black", false), p.getBoolean("auto_white", false),
                 runCatching { GoRules.fromId(p.getString("rules", "chinese")!!) }.getOrDefault(GoRules.CHINESE),
                 p.getFloat("komi", 7.5f).takeIf(::validKomi) ?: 7.5f,
-                KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)))
+                KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)),
+                ComputeProfile.fromId(p.getString("compute_profile", null)))
         }
     }
 }
