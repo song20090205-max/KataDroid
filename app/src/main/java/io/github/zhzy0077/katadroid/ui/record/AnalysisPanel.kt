@@ -91,7 +91,7 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
             // was only visible after manually opening a candidate preview.
             val replyLines = analysis?.candidates.orEmpty().mapNotNull { candidate ->
                 val replies = candidate.opponentReplies.map { reply ->
-                    BoardPoint.fromIndex(reply.move)?.label ?: resources.getString(R.string.pass_move)
+                    (BoardPoint.fromIndex(reply.move)?.label ?: resources.getString(R.string.pass_move)) + "（${reply.visits}訪）"
                 }.ifEmpty {
                     listOfNotNull(candidate.pv.getOrNull(1)?.let { reply ->
                         BoardPoint.fromIndex(reply)?.label ?: resources.getString(R.string.pass_move)
@@ -101,7 +101,7 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
             }
             if (replyLines.isNotEmpty()) {
                 Column(Modifier.fillMaxWidth().padding(bottom = 5.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                    Text("對手主要應手（目前主變化）", fontSize = 9.sp, color = GoColors.Muted,
+                    Text("對手已探索應手（非全部可能）", fontSize = 9.sp, color = GoColors.Muted,
                         modifier = Modifier.testTag("opponent-reply-heading"))
                     replyLines.forEachIndexed { index, line ->
                         Text(line, fontSize = 10.sp, lineHeight = 13.sp,
