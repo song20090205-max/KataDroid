@@ -70,9 +70,9 @@ data class BenchmarkResult(
     }
 }
 
-/** The same single-threaded search/settings as live analysis, on fixed positions. */
+/** The same multi-threaded search/settings as live analysis, on fixed positions. */
 object SearchBenchmark {
-    const val METHOD = "katago-1.18.2-search-v2"
+    const val METHOD = "katago-1.18.2-search-v4-profile-threads"
     const val WARMUP_VISITS = 32
     val positions = listOf(
         "empty" to AnalysisPosition(emptyList()),

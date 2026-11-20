@@ -1,4 +1,6 @@
 #include <jni.h>
+#include <algorithm>
+#include <thread>
 #include <array>
 #include <cmath>
 #include <atomic>
@@ -283,7 +285,7 @@ struct Engine {
   Logger logger;
   std::unique_ptr<NNEvaluator> evaluator;
   std::unique_ptr<Search> search;
-  Engine(JNIEnv* env, jobject runtime, const std::string& path, const std::string& name, int version)
+  Engine(JNIEnv* env, jobject runtime, const std::string& path, const std::string& name, int version, int searchThreads)
     : bridge(env, runtime, name, version) {
     ConfigParser config;
     constructingBridge = &bridge;
@@ -294,7 +296,7 @@ struct Engine {
       constructingBridge = nullptr;
       evaluator->spawnServerThreads();
       SearchParams params;
-      params.numThreads = 1;
+      params.numThreads = std::max(1, std::min(4, searchThreads));
       params.nodeTableShardsPowerOfTwo = 10;
       params.subtreeValueBiasTableNumShards = 1024;
       search = std::make_unique<Search>(params, evaluator.get(), &logger, "katadroid-search");
@@ -343,8 +345,8 @@ Java_io_github_zhzy0077_katadroid_engine_NativeKataGo_featuresPosition(JNIEnv* e
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_io_github_zhzy0077_katadroid_engine_NativeKataGo_create(JNIEnv* env, jobject, jobject runtime, jstring path, jstring name, jint version) {
-  try { initialize(); return reinterpret_cast<jlong>(new Engine(env, runtime, javaString(env, path), javaString(env, name), version)); }
+Java_io_github_zhzy0077_katadroid_engine_NativeKataGo_create(JNIEnv* env, jobject, jobject runtime, jstring path, jstring name, jint version, jint searchThreads) {
+  try { initialize(); return reinterpret_cast<jlong>(new Engine(env, runtime, javaString(env, path), javaString(env, name), version, searchThreads)); }
   catch (const std::exception& error) { throwJava(env, error); return 0; }
 }
 

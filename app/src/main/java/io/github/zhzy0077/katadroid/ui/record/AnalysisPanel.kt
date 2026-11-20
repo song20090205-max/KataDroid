@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import io.github.zhzy0077.katadroid.engine.analysisFor
 import io.github.zhzy0077.katadroid.engine.EnginePhase
 import io.github.zhzy0077.katadroid.engine.EngineUiState
-import io.github.zhzy0077.katadroid.engine.PASS
 import io.github.zhzy0077.katadroid.ui.theme.GoColors
 import java.util.Locale
 import kotlin.math.abs
@@ -73,13 +72,13 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
         EnginePhase.READY -> "${engine.config.model.id} · ${analysis?.backend ?: resources.getString(engine.config.backend.labelRes)}"
     }
     Surface(modifier.testTag("analysis-panel").semantics {
-        stateDescription = resources.getString(R.string.analysis_description, position.moves.size, analysis?.let { "${it.visits} visits" } ?: resources.getString(R.string.not_analyzed), status)
+        stateDescription = resources.getString(R.string.analysis_description, position.moves.size, analysis?.let { resources.getString(R.string.visits_count, it.visits) } ?: resources.getString(R.string.not_analyzed), status)
     }, shape = RoundedCornerShape(20.dp), color = GoColors.Surface, border = BorderStroke(1.dp, GoColors.Outline)) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(title, fontSize = 10.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium, color = GoColors.Primary,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).testTag("analysis-title"))
-                Text(analysis?.let { "${it.visits} visits" } ?: "", fontSize = 9.sp, color = GoColors.Muted,
+                Text(analysis?.let { resources.getString(R.string.visits_count, it.visits) } ?: "", fontSize = 9.sp, color = GoColors.Muted,
                     modifier = Modifier.testTag("analysis-visits"))
             }
             Row(Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

@@ -13,6 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
@@ -23,6 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.zhzy0077.katadroid.FloatingAssistantService
+import androidx.core.content.ContextCompat
 import io.github.zhzy0077.katadroid.R
 import io.github.zhzy0077.katadroid.engine.GoRules
 import io.github.zhzy0077.katadroid.engine.MAX_VISITS
@@ -45,10 +51,12 @@ fun SettingsScreen(
     onBack: () -> Unit, onDiagnostics: () -> Unit, onEngines: () -> Unit,
 ) {
     val resources = LocalResources.current
+    val context = LocalContext.current
     val focus = LocalFocusManager.current
     var draftRule by rememberSaveable(rules) { mutableStateOf(rules) }
     var draftKomi by rememberSaveable(komi) { mutableStateOf(komi.toString()) }
     var draftVisits by rememberSaveable(settings.maxVisits) { mutableStateOf(settings.maxVisits.toString()) }
+    var draftProfile by rememberSaveable(settings.computeProfile) { mutableStateOf(settings.computeProfile) }
     var draftOffset by rememberSaveable(settings.touchOffsetPx) { mutableStateOf(settings.touchOffsetPx.toString()) }
     var autoBlack by rememberSaveable(settings.autoBlack) { mutableStateOf(settings.autoBlack) }
     var autoWhite by rememberSaveable(settings.autoWhite) { mutableStateOf(settings.autoWhite) }
@@ -58,7 +66,7 @@ fun SettingsScreen(
     val parsedVisits = draftVisits.toIntOrNull()?.takeIf { it in 1..MAX_VISITS }
     val parsedOffset = draftOffset.toIntOrNull()?.takeIf { it in 0..300 }
     val valid = parsedKomi != null && parsedVisits != null && parsedOffset != null
-    val changed = parsedKomi != komi || draftRule != rules || parsedVisits != settings.maxVisits ||
+    val changed = parsedKomi != komi || draftRule != rules || draftProfile != settings.computeProfile || parsedVisits != settings.maxVisits ||
         parsedOffset != settings.touchOffsetPx || autoBlack != settings.autoBlack || autoWhite != settings.autoWhite ||
         coordinates != settings.coordinates || candidates != settings.candidates
 
@@ -68,6 +76,21 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SettingsCard {
                 SectionTitle(resources.getString(R.string.search_automation))
+                Text(resources.getString(R.string.compute_profile), fontSize = 14.sp, color = GoColors.Ink)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ComputeProfile.entries.forEach { profile ->
+                        val label = when (profile) {
+                            ComputeProfile.POWER_SAVING -> R.string.profile_power_saving
+                            ComputeProfile.BALANCED -> R.string.profile_balanced
+                            ComputeProfile.HIGH_PERFORMANCE -> R.string.profile_high_performance
+                        }
+                        FilterChip(selected = draftProfile == profile, onClick = {
+                            draftProfile = profile
+                            draftVisits = profile.visits.toString()
+                        }, label = { Text(resources.getString(label)) }, modifier = Modifier.weight(1f).testTag("compute-profile-${profile.name}"))
+                    }
+                }
+                Hint(resources.getString(R.string.compute_profile_hint))
                 IntegerSetting(resources.getString(R.string.search_limit), "visits", draftVisits, 1..MAX_VISITS,
                     listOf(100, 500, 1000, 5000), "search-limit") { draftVisits = it }
                 ToggleRow(resources.getString(R.string.auto_black), resources.getString(R.string.katago_black), autoBlack, { autoBlack = it }, "auto-black")
@@ -97,10 +120,23 @@ fun SettingsScreen(
                 ToggleRow(resources.getString(R.string.coordinates), resources.getString(R.string.coordinates_hint), coordinates, { coordinates = it }, "setting-coordinates")
                 ToggleRow(resources.getString(R.string.candidates), resources.getString(R.string.candidates_hint), candidates, { candidates = it }, "setting-candidates")
                 Hint(resources.getString(R.string.candidate_color_hint))
-                HorizontalDivider(color = GoColors.Outline)
                 IntegerSetting(resources.getString(R.string.touch_offset), "px", draftOffset, 0..300,
                     listOf(0, 60, 120), "touch-offset") { draftOffset = it }
                 Hint(resources.getString(R.string.touch_hint))
+            }
+            SettingsCard {
+                SectionTitle(resources.getString(R.string.floating_assistant_title))
+                Hint(resources.getString(R.string.floating_assistant_settings_hint))
+                Button(onClick = {
+                    if (Settings.canDrawOverlays(context)) {
+                        ContextCompat.startForegroundService(context, Intent(context, FloatingAssistantService::class.java))
+                    } else {
+                        context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:${context.packageName}")))
+                    }
+                }, modifier = Modifier.fillMaxWidth().testTag("start-floating-assistant")) {
+                    Text(resources.getString(R.string.floating_assistant_enable))
+                }
             }
             SettingsCard {
                 SectionTitle(resources.getString(R.string.engine))
@@ -117,7 +153,9 @@ fun SettingsScreen(
                 Button(onClick = {
                     focus.clearFocus()
                     onApply(settings.copy(maxVisits = checkNotNull(parsedVisits), touchOffsetPx = checkNotNull(parsedOffset),
-                        autoBlack = autoBlack, autoWhite = autoWhite, coordinates = coordinates, candidates = candidates),
+                        autoBlack = autoBlack, autoWhite = autoWhite, coordinates = coordinates, candidates = candidates,
+                        computeProfile = draftProfile,
+                        model = if (draftProfile != settings.computeProfile) draftProfile.model else settings.model),
                         draftRule, checkNotNull(parsedKomi))
                 }, enabled = changed && valid && !busy, modifier = Modifier.fillMaxWidth().testTag("apply-settings")) {
                     Text(resources.getString(if (busy) R.string.applying else if (changed) R.string.apply_settings else R.string.settings_saved))

@@ -46,7 +46,7 @@ data class KataGoModel(
         @Volatile private var imported: List<KataGoModel> = emptyList()
         val entries get() = bundled + imported
         fun refresh(context: Context) { imported = ModelPackages.installed(context) }
-        fun fromId(id: String?) = entries.firstOrNull { it.id == id } ?: B6
+        fun fromId(id: String?) = entries.firstOrNull { it.id == id } ?: B10
     }
 }
 
@@ -65,9 +65,10 @@ enum class EngineBackend(@param:StringRes val labelRes: Int) {
     }
 }
 
-data class EngineConfig(val model: KataGoModel = KataGoModel.B6, val backend: EngineBackend = EngineBackend.AUTO) {
+data class EngineConfig(val model: KataGoModel = KataGoModel.B6, val backend: EngineBackend = EngineBackend.AUTO, val searchThreads: Int = 2) {
+    init { require(searchThreads in 1..4) }
     val accelerator get() = backend.accelerator()
     // Persist results using the actual backend, never an unresolved AUTO key.
-    val cacheKey get() = "${if (model.directory == null) model.sha256 else "${model.id}-adapter1"}-${backend.name}"
+    val cacheKey get() = "${if (model.directory == null) model.sha256 else "${model.id}-adapter1"}-${backend.name}-t$searchThreads"
     val label get() = "${model.id} · ${backend.name}"
 }

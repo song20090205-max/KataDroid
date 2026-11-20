@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">KataDroid</string>
+    <string name="app_name">KataGo Master</string>
     <string name="back">返回</string>
     <string name="settings">设置</string>
     <string name="cancel">取消</string>
+    <string name="compute_profile">運算模式</string>
+    <string name="profile_power_saving">省電</string>
+    <string name="profile_balanced">平衡</string>
+    <string name="profile_high_performance">高算力</string>
+    <string name="compute_profile_hint">省電：b6c96、500 次搜尋、1 執行緒；平衡：b6c96、2000 次、2 執行緒；高算力：b10c128、5000 次、4 執行緒。高算力會依手機溫度與省電狀態降低持續運算負載。</string>
     <string name="search_automation">搜索与自动落子</string>
     <string name="search_limit">搜索预算</string>
     <string name="auto_black">黑棋自动落子</string>
@@ -21,6 +26,7 @@
     <string name="coordinates_hint">显示字母与路数</string>
     <string name="candidates">候选变化</string>
     <string name="candidates_hint">显示 A / B / C，长按预览</string>
+    <string name="move_explanation_hint">显示 AI 首选落点与你这手棋的胜率、目数评估比较；关闭不影响棋局分析。</string>
     <string name="candidate_color_hint">按当前行棋方相对最佳选点的胜率损失着色：接近最佳为绿，损失越大越偏黄、红；字母保留搜索推荐顺序。</string>
     <string name="touch_offset">落点向手指上方偏移</string>
     <string name="touch_hint">按实际屏幕像素偏移。按住拖动预览落点，松手落子；棋盘下方留有触控区，可落在最底一行。</string>
@@ -29,7 +35,7 @@
     <string name="engines_hint">切换模型与测试搜索性能</string>
     <string name="model_validation">模型数值验证</string>
     <string name="validation_hint">对照参考输出验证本机推理</string>
-    <string name="visits_hint">访问数不代表固定棋力。关闭引擎后保留已有分析；新局面仅显示该局面的结果。</string>
+    <string name="visits_hint">默认每个局面搜索 5000 次，并使用最多 4 个 CPU 搜索线程。次数越高通常需要更久，也会增加耗电与发热；关闭引擎后保留已有分析。</string>
     <string name="apply_settings">应用全部设置</string>
     <string name="settings_saved">全部设置已保存</string>
     <string name="settings_pending">有未保存的更改</string>
@@ -123,7 +129,7 @@
     <string name="analysis_description">第 %1$d 手，%2$s，%3$s</string>
     <string name="pass_preview">%1$s · 停一手 · 查看变化</string>
     <string name="board_scoring">%1$s规则 · 盘面计分</string>
-    <string name="cached_visits">已有 %1$d visits · 新搜索预算 %2$d</string>
+    <string name="cached_visits">已搜索 %1$d 次 · 新搜索预算 %2$d</string>
     <string name="last_analyzed">最后已分析第 %1$d 手</string>
     <string name="black_wins">黑棋胜</string>
     <string name="white_wins">白棋胜</string>
@@ -176,18 +182,18 @@
     <string name="tree_current"> 当前</string>
     <string name="tree_minimap">整棵棋谱树缩略图，方框标示当前视野</string>
     <string name="backend_hint">自动模式先尝试可用的 NPU 运行时，再使用 CPU。手选 CPU、GPU 或 NPU 时会报告后端错误。GPU 使用 FP32 并检查 CPU 数值参考。</string>
-    <string name="previous_speed">上次 %1$s visits/s · %2$d × %3$d · %4$s</string>
+    <string name="previous_speed">上次 %1$s 次搜索／秒 · %2$d × %3$d · %4$s</string>
     <string name="model_weights">当前权重：%1$s</string>
-    <string name="benchmark_visits_hint">每局面 %1$d visits，共 %2$d；不改变棋局搜索预算。</string>
+    <string name="benchmark_visits_hint">每个局面搜索 %1$d 次，共 %2$d 次；不改变棋局搜索预算。</string>
     <string name="benchmark_loading">正在加载 %1$s…</string>
-    <string name="benchmark_warming">预热中 · %1$d visits</string>
+    <string name="benchmark_warming">预热中 · %1$d 次搜索</string>
     <string name="benchmark_failed">测试失败：%1$s</string>
     <string name="benchmark_completed">上次完成 · %1$s · %2$s</string>
-    <string name="benchmark_search_time">%1$d 实际 visits / %2$s 秒搜索</string>
+    <string name="benchmark_search_time">实际搜索 %1$d 次／耗时 %2$s 秒</string>
     <string name="benchmark_setup_time">初始化 %1$s ms · 预热 %2$s ms（另计）</string>
     <string name="katago_models">KataGo 模型</string>
     <string name="model_untested">尚未测试此后端</string>
-    <string name="model_strength_hint">b10c128 在官方等 visits 测试中更强。更大网络会增加推理开销，可结合本机测速选择。</string>
+    <string name="model_strength_hint">默认使用较强的 b10c128 模型；配合较高搜索次数与最多 4 个 CPU 搜索线程，优先分析质量。长时间高负载可能增加耗电与发热。</string>
     <string name="compute_device">计算设备</string>
     <string name="search_benchmark">搜索性能测试</string>
     <string name="benchmark_cases">空棋盘、布局、提子后三个固定局面；每个局面从零搜索。</string>
@@ -195,13 +201,13 @@
     <string name="run_benchmark">测试模型性能</string>
     <string name="rerun_benchmark">重新测试</string>
     <string name="benchmark_cancelled">测试已取消，未保存本次结果。</string>
-    <string name="benchmark_method">visits/s = 实际搜索访问数 ÷ 搜索耗时。测速期间暂停棋局分析与自动落子，离开或切换模型会取消测试。</string>
+    <string name="benchmark_method">每秒搜尋次數 = 實際搜尋次數 ÷ 搜尋耗時。测速期间暂停棋局分析与自动落子，离开或切换模型会取消测试。</string>
     <string name="benchmark_caveat">这是短时搜索吞吐量，受局面、温度与后台负载影响，不直接代表棋力。</string>
     <string name="case_empty">空棋盘</string>
     <string name="case_opening">布局八手</string>
     <string name="case_capture">提子后白走</string>
     <string name="cpu_validation_only">当前安装包在本设备上没有可用的 NPU 运行库，可使用 CPU 验证。</string>
-    <string name="diagnostics_description">KataGo %1$s · 19×19。使用三个固定局面，对照官方模型验证 %2$s 输出；搜索 visits/s 请在引擎与模型页面测试。</string>
+    <string name="diagnostics_description">KataGo %1$s · 19×19。使用三个固定局面，对照官方模型验证 %2$s 输出；搜尋速度請在引擎與模型頁面測試。</string>
     <string name="validation_waiting">等待开始验证</string>
     <string name="diagnostics_title">模型验证</string>
     <string name="local_inference">KataGo · 本机推理</string>
@@ -234,4 +240,30 @@
     <string name="model_import_complete">已导入 %1$s。请在上方选择该模型以使用。</string>
     <string name="model_import_failed">模型导入失败。请检查模型包版本、校验和及 CPU 数值参考。</string>
     <string name="model_import_hint">导入包含通用计算图、对应 KataGo 描述文件及数值参考的 .kdmodel ZIP 包。内置模型仍可使用。</string>
+    <string name="visits_count">%1$d 次搜索</string>
+    <string name="benchmark_progress">%1$s · %2$d / %3$d 次搜索</string>
+    <string name="benchmark_rate">%1$s 次搜索／秒</string>
+    <string name="benchmark_sample_rate">%1$s 次搜索／秒</string>
+
+    <string name="analysis_explain_title">AI 棋步解析</string>
+    <string name="analysis_explain_waiting">正在補齊這手棋前後的分析資料，完成後就能評估這手棋。</string>
+    <string name="analysis_explain_best">目前首選：%1$s（搜尋 %2$d 次）。這是本次搜尋排名第一的落點。</string>
+    <string name="analysis_explain_current">AI 首選：%1$s（搜尋 %2$d 次）。預估勝率比第二候選點高 %3$s 個百分點。</string>
+    <string name="analysis_explain_good">你下的 %1$s 與 AI 原先首選接近，預估勝率差距約 %2$s 個百分點；目數評估差約 %3$s 目。</string>
+    <string name="analysis_explain_mistake">你下的 %1$s 與 AI 原先首選相比，預估損失約 %2$s 個勝率百分點；目數評估差約 %3$s 目。</string>
+    <string name="analysis_explain_blunder">你下的 %1$s 與 AI 原先首選相比，預估損失約 %2$s 個勝率百分點；目數評估差約 %3$s 目，局面評估下降明顯。</string>
+    <string name="analysis_explain_better">你下的 %1$s 目前評估比 AI 原先首選高約 %2$s 個勝率百分點；目數評估差約 %3$s 目。由於搜尋結果可能波動，建議提高搜尋次數確認。</string>
+    <string name="analysis_explain_preview">預覽 AI 首選</string>
+
+    <string name="floating_assistant_title">棋盤懸浮助手</string>
+    <string name="floating_assistant_settings_hint">在你有權測試的圍棋程式上顯示可拖曳懸浮按鈕。此階段先完成懸浮視窗；螢幕擷取、棋盤辨識與 KataGo 分析整合仍在開發。</string>
+    <string name="floating_assistant_enable">啟動／設定懸浮助手</string>
+    <string name="floating_assistant_bubble">棋</string>
+    <string name="floating_assistant_description">圍棋懸浮助手，點擊展開</string>
+    <string name="floating_assistant_prototype">懸浮助手已啟動。可快速開啟 KataGo Master；跨程式棋盤擷取與自動辨識尚未接通。</string>
+    <string name="floating_assistant_open_app">開啟 KataGo Master</string>\n    <string name="floating_assistant_close_panel">收合面板</string>
+    <string name="floating_assistant_stop">停止懸浮助手</string>
+    <string name="floating_assistant_notification_title">KataGo 懸浮助手</string>
+    <string name="floating_assistant_notification_text">懸浮按鈕正在顯示；點擊通知可返回應用程式。</string>
+
 </resources>

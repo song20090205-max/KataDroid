@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">KataDroid</string>
+    <string name="app_name">KataGo Master</string>
     <string name="back">Back</string>
     <string name="settings">Settings</string>
     <string name="cancel">Cancel</string>
+    <string name="compute_profile">Compute mode</string>
+    <string name="profile_power_saving">Power saving</string>
+    <string name="profile_balanced">Balanced</string>
+    <string name="profile_high_performance">High performance</string>
+    <string name="compute_profile_hint">Power saving: b6c96, 500 visits, 1 thread. Balanced: b6c96, 2,000 visits, 2 threads. High performance: b10c128, 5,000 visits, 4 threads. High performance reduces sustained workload when the phone is warm or battery saver is active.</string>
     <string name="search_automation">Search &amp; automatic moves</string>
     <string name="search_limit">Search budget</string>
     <string name="auto_black">Play Black automatically</string>
@@ -29,7 +34,7 @@
     <string name="engines_hint">Switch models and measure search speed</string>
     <string name="model_validation">Model validation</string>
     <string name="validation_hint">Compare local inference with reference outputs</string>
-    <string name="visits_hint">Visits are a search budget, not a fixed strength rating. Turning the engine off keeps saved analysis.</string>
+    <string name="visits_hint">Default: 5,000 visits per position and up to 4 CPU search threads. More visits usually take longer and increase battery use and heat. Turning the engine off keeps saved analysis.</string>
     <string name="apply_settings">Apply all changes</string>
     <string name="settings_saved">All changes saved</string>
     <string name="settings_pending">Unsaved changes</string>
@@ -187,7 +192,7 @@
     <string name="benchmark_setup_time">Initialization %1$s ms · Warm-up %2$s ms (excluded)</string>
     <string name="katago_models">KataGo models</string>
     <string name="model_untested">This backend has not been measured</string>
-    <string name="model_strength_hint">The larger network trades inference speed for stronger play at equal visits in upstream tests. Compare search speed on your device.</string>
+    <string name="model_strength_hint">The stronger b10c128 model is selected by default, with up to 4 CPU search threads. This prioritizes analysis quality; sustained heavy use may increase heat and battery use.</string>
     <string name="compute_device">Compute backend</string>
     <string name="search_benchmark">Search benchmark</string>
     <string name="benchmark_cases">Three fixed positions: empty, opening and after capture. Search starts fresh for each one.</string>
@@ -234,4 +239,30 @@
     <string name="model_import_complete">Imported %1$s. Select it above to use it.</string>
     <string name="model_import_failed">Model import failed. Check the package version, checksums and CPU references.</string>
     <string name="model_import_hint">Import a .kdmodel ZIP containing a portable graph, matching KataGo descriptor and numerical references. Bundled models remain available.</string>
+    <string name="visits_count">%1$d visits</string>
+    <string name="benchmark_progress">%1$s · %2$d / %3$d visits</string>
+    <string name="benchmark_rate">%1$s visits/s</string>
+    <string name="benchmark_sample_rate">%1$s visits/s</string>
+
+    <string name="analysis_explain_title">AI move explanation</string>
+    <string name="analysis_explain_waiting">Waiting for enough analysis of the positions before and after this move.</string>
+    <string name="analysis_explain_best">Current top choice: %1$s (%2$d visits). It ranks first in the current search.</string>
+    <string name="analysis_explain_current">Top choice: %1$s · %2$d visits. Its estimated win rate is %3$s percentage points above the second candidate.</string>
+    <string name="analysis_explain_good">Your move %1$s is close to the previous top choice from KataGo (estimated win-rate gap: %2$s percentage points; score-lead gap: %3$s points).</string>
+    <string name="analysis_explain_mistake">Move %1$s is estimated to lose about %2$s win-rate percentage points compared with the previous top choice (score-lead gap: %3$s points).</string>
+    <string name="analysis_explain_blunder">Move %1$s is estimated to lose about %2$s win-rate percentage points compared with the previous top choice (score-lead gap: %3$s points), a large evaluation drop.</string>
+    <string name="analysis_explain_better">Move %1$s currently evaluates about %2$s win-rate percentage points better than the previous top choice (score-lead gap: %3$s points). Increase visits to confirm because search estimates can vary.</string>
+    <string name="analysis_explain_preview">Preview top line</string>
+
+    <string name="floating_assistant_title">Floating Go assistant</string>
+    <string name="floating_assistant_settings_hint">Show a draggable floating button over Go apps you own or are authorized to test. This milestone adds the overlay shell; screen capture, board recognition and KataGo integration are still in development.</string>
+    <string name="floating_assistant_enable">Start / configure floating assistant</string>
+    <string name="floating_assistant_bubble">Go</string>
+    <string name="floating_assistant_description">Floating Go assistant. Tap to expand.</string>
+    <string name="floating_assistant_prototype">The floating assistant is running. Open KataGo Master here; cross-app board capture and recognition are not connected yet.</string>
+    <string name="floating_assistant_open_app">Open KataGo Master</string>\n    <string name="floating_assistant_close_panel">Collapse panel</string>
+    <string name="floating_assistant_stop">Stop floating assistant</string>
+    <string name="floating_assistant_notification_title">KataGo floating assistant</string>
+    <string name="floating_assistant_notification_text">The floating button is visible. Tap to return to the app.</string>
+
 </resources>

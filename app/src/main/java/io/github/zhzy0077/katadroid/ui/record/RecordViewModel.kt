@@ -60,7 +60,8 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
                 if (rulesChanged) record.applyRules(rules, komi)
                 // Engine selection can change on another page while a large record is validated.
                 updatePreferences(value.copy(rules = rules, komi = komi, engineEnabled = preferences.engineEnabled,
-                    model = preferences.model, backend = preferences.backend))
+                    model = if (value.computeProfile != preferences.computeProfile) value.model else preferences.model,
+                    backend = preferences.backend, computeProfile = value.computeProfile))
             }
         }
     }
