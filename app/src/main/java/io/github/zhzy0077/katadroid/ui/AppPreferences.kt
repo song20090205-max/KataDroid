@@ -14,24 +14,24 @@ enum class ComputeProfile(val model: KataGoModel, val visits: Int, val searchThr
     BALANCED(KataGoModel.B6, 2000, 2),
     HIGH_PERFORMANCE(KataGoModel.B10, 5000, 4);
     companion object {
-        fun fromId(id: String?) = entries.firstOrNull { it.name == id } ?: HIGH_PERFORMANCE
+        fun fromId(id: String?) = entries.firstOrNull { it.name == id } ?: POWER_SAVING
     }
 }
 
 data class AppPreferences(
     val coordinates: Boolean = true,
     val candidates: Boolean = true,
-    val engineEnabled: Boolean = true,
-    val maxVisits: Int = 5000,
+    val engineEnabled: Boolean = false,
+    val maxVisits: Int = 500,
     val touchOffsetPx: Int = 0,
     val autoBlack: Boolean = false,
     val autoWhite: Boolean = false,
     val rules: GoRules = GoRules.CHINESE,
     val komi: Float = 7.5f,
-    val model: KataGoModel = KataGoModel.B10,
+    val model: KataGoModel = KataGoModel.B6,
     val backend: EngineBackend = EngineBackend.CPU,
     val showMoveExplanation: Boolean = true,
-    val computeProfile: ComputeProfile = ComputeProfile.HIGH_PERFORMANCE,
+    val computeProfile: ComputeProfile = ComputeProfile.POWER_SAVING,
 ) {
     val engineConfig get() = EngineConfig(model, backend, computeProfile.searchThreads)
     fun automatic(color: Int) = if (color == 1) autoBlack else autoWhite
@@ -75,6 +75,18 @@ data class AppPreferences(
                         putString("backend", EngineBackend.CPU.name)
                     }
                     putInt("compute_profile_version", 3)
+                }
+            }
+            // Low-memory diagnostic profile: B6, CPU, one search thread and 500 visits.
+            // This is intentionally conservative after engine initialization caused app exits.
+            if (p.getInt("compute_profile_version", 0) < 4) {
+                p.edit {
+                    putBoolean("engine_enabled", false)
+                    putString("model", KataGoModel.B6.id)
+                    putString("backend", EngineBackend.CPU.name)
+                    putString("compute_profile", ComputeProfile.POWER_SAVING.name)
+                    putInt("max_visits", 500)
+                    putInt("compute_profile_version", 4)
                 }
             }
             val profile = ComputeProfile.fromId(p.getString("compute_profile", null))
