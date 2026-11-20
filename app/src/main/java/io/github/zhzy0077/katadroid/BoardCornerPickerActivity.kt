@@ -18,6 +18,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.graphics.Typeface
 import kotlin.math.roundToInt
+import kotlin.math.atan2
+import kotlin.math.PI
 
 /**
  * User marks the four outer grid intersections in clockwise order.
@@ -368,28 +370,42 @@ private object GoBoardImageRecognizer {
                 val cx = (GRID_MARGIN + column * GRID_STEP).roundToInt()
                 val cy = (GRID_MARGIN + row * GRID_STEP).roundToInt()
                 val center = ArrayList<Int>()
-                val surrounding = ArrayList<Int>()
-                val innerRadius = GRID_STEP * 0.20f
-                val ringInner = GRID_STEP * 0.31f
-                val ringOuter = GRID_STEP * 0.44f
-                val scanRadius = ringOuter.roundToInt()
+                val background = ArrayList<Int>()
+                val sectors = Array(8) { ArrayList<Int>() }
+                val coreRadius = GRID_STEP * 0.13f
+                val ringInner = GRID_STEP * 0.19f
+                val ringOuter = GRID_STEP * 0.35f
+                val backgroundInner = GRID_STEP * 0.52f
+                val backgroundOuter = GRID_STEP * 0.67f
+                val scanRadius = backgroundOuter.roundToInt()
                 for (dy in -scanRadius..scanRadius) for (dx in -scanRadius..scanRadius) {
                     val distance = kotlin.math.sqrt((dx * dx + dy * dy).toFloat())
-                    if (distance <= innerRadius) {
-                        center += luminance(cx + dx, cy + dy)
+                    val value = luminance(cx + dx, cy + dy)
+                    if (distance <= coreRadius) {
+                        center += value
                     } else if (distance >= ringInner && distance <= ringOuter) {
-                        surrounding += luminance(cx + dx, cy + dy)
+                        // Eight angular sectors distinguish a round stone from the
+                        // four dark grid arms at an otherwise empty intersection.
+                        val angle = atan2(dy.toFloat(), dx.toFloat()) + PI
+                        val sector = (angle / (PI / 4.0)).toInt().coerceIn(0, 7)
+                        sectors[sector] += value
+                    } else if (distance >= backgroundInner && distance <= backgroundOuter) {
+                        background += value
                     }
                 }
                 val centerMedian = median(center)
-                val backgroundMedian = median(surrounding)
-                val contrast = centerMedian - backgroundMedian
+                val backgroundMedian = median(background)
+                val sectorMedians = sectors.mapNotNull { values ->
+                    if (values.isEmpty()) null else median(values)
+                }
+                val darkSectors = sectorMedians.count { it <= backgroundMedian - 28 }
+                val brightSectors = sectorMedians.count { it >= backgroundMedian - 12 }
                 when {
-                    contrast <= -48 && centerMedian < 125 -> 'X'
-                    contrast >= 24 && centerMedian > 145 -> 'O'
-                    // Borderline patches are exposed for manual review.
-                    contrast <= -27 && centerMedian < 145 -> '?'
-                    contrast >= 13 && centerMedian > 135 -> '?'
+                    // A real stone should occupy most directions around the point;
+                    // an empty grid crossing normally darkens only four directions.
+                    centerMedian < 125 && darkSectors >= 6 -> 'X'
+                    centerMedian > 148 && brightSectors >= 6 -> 'O'
+                    darkSectors >= 5 || brightSectors >= 5 -> '?'
                     else -> '.'
                 }
             }
