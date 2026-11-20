@@ -90,9 +90,14 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
             // The engine already searches alternating moves; previously this reply
             // was only visible after manually opening a candidate preview.
             val replyLines = analysis?.candidates.orEmpty().mapNotNull { candidate ->
-                val reply = candidate.pv.getOrNull(1) ?: return@mapNotNull null
-                val label = BoardPoint.fromIndex(reply)?.label ?: resources.getString(R.string.pass_move)
-                "${candidate.label} 後：$label"
+                val replies = candidate.opponentReplies.map { reply ->
+                    BoardPoint.fromIndex(reply.move)?.label ?: resources.getString(R.string.pass_move)
+                }.ifEmpty {
+                    listOfNotNull(candidate.pv.getOrNull(1)?.let { reply ->
+                        BoardPoint.fromIndex(reply)?.label ?: resources.getString(R.string.pass_move)
+                    })
+                }
+                if (replies.isEmpty()) null else "${candidate.label} 後：${replies.joinToString("、")}"
             }
             if (replyLines.isNotEmpty()) {
                 Column(Modifier.fillMaxWidth().padding(bottom = 5.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
