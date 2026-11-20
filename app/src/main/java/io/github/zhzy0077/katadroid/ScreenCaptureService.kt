@@ -174,6 +174,9 @@ class ScreenCaptureService : Service() {
     }
 
     override fun onDestroy() {
+        val activeProjection = projection
+        projection = null
+        runCatching { activeProjection?.stop() }
         releaseCaptureResources()
         super.onDestroy()
     }
