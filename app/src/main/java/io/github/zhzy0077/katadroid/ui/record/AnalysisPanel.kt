@@ -86,6 +86,24 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
                 Metric(resources.getString(R.string.black_win_rate), analysis?.blackWinRate?.oneDecimal() ?: "—", "%", false, "win-rate")
                 Metric(if ((analysis?.blackLead ?: 0f) >= 0) resources.getString(R.string.black_lead) else resources.getString(R.string.white_lead), analysis?.blackLead?.let { abs(it).oneDecimal() } ?: "—", resources.getString(R.string.points), true, "score-lead")
             }
+            // Surface the opponent's best reply from each principal variation.
+            // The engine already searches alternating moves; previously this reply
+            // was only visible after manually opening a candidate preview.
+            val replyLines = analysis?.candidates.orEmpty().mapNotNull { candidate ->
+                val reply = candidate.pv.getOrNull(1) ?: return@mapNotNull null
+                val label = BoardPoint.fromIndex(reply)?.label ?: resources.getString(R.string.pass_move)
+                "${candidate.label} 後：$label"
+            }
+            if (replyLines.isNotEmpty()) {
+                Column(Modifier.fillMaxWidth().padding(bottom = 5.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text("對手主要應手（目前主變化）", fontSize = 9.sp, color = GoColors.Muted,
+                        modifier = Modifier.testTag("opponent-reply-heading"))
+                    replyLines.forEachIndexed { index, line ->
+                        Text(line, fontSize = 10.sp, lineHeight = 13.sp,
+                            color = GoColors.Ink, modifier = Modifier.testTag("opponent-reply-$index"))
+                    }
+                }
+            }
             if (phase == EnginePhase.ERROR) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(if (analysis != null) resources.getString(R.string.analysis_failed_saved) else resources.getString(R.string.analysis_failed_retry), fontSize = 10.sp, color = GoColors.Muted)
