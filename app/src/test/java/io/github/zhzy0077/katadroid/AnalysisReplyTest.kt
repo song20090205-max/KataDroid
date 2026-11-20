@@ -9,6 +9,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AnalysisReplyTest {
+    private fun intArray(vararg values: Int) = JSONArray().apply {
+        values.forEach { put(it) }
+    }
+
     @Test fun parsesOpponentReplyThreatMetrics() {
         val position = AnalysisPosition(listOf(60))
         val reply = JSONObject()
@@ -22,7 +26,7 @@ class AnalysisReplyTest {
             .put("visits", 120)
             .put("blackWinRate", 48.0)
             .put("blackLead", -1.0)
-            .put("pv", JSONArray(listOf(100, 101)))
+            .put("pv", intArray(100, 101))
             .put("opponentReplies", JSONArray().put(reply))
         val result = JSONObject()
             .put("visits", 120)
@@ -53,7 +57,7 @@ class AnalysisReplyTest {
             .put("visits", 20)
             .put("blackWinRate", 51.0)
             .put("blackLead", 0.5)
-            .put("pv", JSONArray(listOf(100, 101)))
+            .put("pv", intArray(100, 101))
         val result = JSONObject()
             .put("visits", 20)
             .put("blackWinRate", 51.0)
