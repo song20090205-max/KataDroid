@@ -265,4 +265,16 @@
     <string name="screen_capture_complete">擷取完成，點選通知預覽畫面。</string>
     <string name="screen_capture_preview_description">你已授權擷取的螢幕畫面預覽</string>
     <string name="screen_capture_notifications_required">請允許通知，才能開啟擷取畫面的預覽。</string>
+    <string name="board_capture_start">校準圍棋棋盤</string>
+    <string name="board_capture_corner_hint">依序點選棋盤最外側四個線交點：左上、右上、右下、左下。</string>
+    <string name="board_capture_corner_progress">已選取角點：%1$d / 4</string>
+    <string name="board_capture_reset">重設</string>
+    <string name="board_capture_recognize">辨識棋子</string>
+    <string name="board_capture_failed">無法校準棋盤，請重新選取四個最外側交點。</string>
+    <string name="board_capture_result">辨識結果：黑棋 %1$d 顆、白棋 %2$d 顆、不確定 %3$d 點。請先檢查盤面。</string>
+    <string name="board_capture_analyze">分析此盤面</string>
+    <string name="board_capture_next_player">接下來輪到哪一方？</string>
+    <string name="black_to_play">黑棋行棋</string>
+    <string name="white_to_play">白棋行棋</string>
+    <string name="board_capture_record_name">螢幕辨識棋局</string>
 </resources>
