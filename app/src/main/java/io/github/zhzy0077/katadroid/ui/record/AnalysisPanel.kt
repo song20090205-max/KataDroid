@@ -91,7 +91,9 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
             // was only visible after manually opening a candidate preview.
             val replyLines = analysis?.candidates.orEmpty().mapNotNull { candidate ->
                 val replies = candidate.opponentReplies.map { reply ->
-                    (BoardPoint.fromIndex(reply.move)?.label ?: resources.getString(R.string.pass_move)) + "（${reply.visits}訪）"
+                    val move = BoardPoint.fromIndex(reply.move)?.label ?: resources.getString(R.string.pass_move)
+                    val swing = if (reply.winRateSwing >= 0f) "+" else ""
+                    "$move（對手勝率評估 $swing${reply.winRateSwing.oneDecimal()}%、${reply.visits}訪）"
                 }.ifEmpty {
                     listOfNotNull(candidate.pv.getOrNull(1)?.let { reply ->
                         BoardPoint.fromIndex(reply)?.label ?: resources.getString(R.string.pass_move)
