@@ -33,8 +33,6 @@ jobs:
       - name: Build and check CPU-capable APK
         run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
 
-      # Preserve a validated build artifact even if the emulator regression test fails or times out.
-
       # Save the APK before emulator tests so it survives a regression-test failure.
       - name: Upload KataGo Master APK
         if: success()
@@ -46,7 +44,6 @@ jobs:
           retention-days: 14
 
       - name: Run board recognition regression test on Android emulator
-        timeout-minutes: 20
         timeout-minutes: 20
         uses: reactivecircus/android-emulator-runner@v2
         env:
