@@ -216,8 +216,11 @@ private object GoBoardImageRecognizer {
             source[index * 2] = point.x
             source[index * 2 + 1] = point.y
         }
-        val destination = floatArrayOf(0f, 0f, OUTPUT_SIZE.toFloat(), 0f,
-            OUTPUT_SIZE.toFloat(), OUTPUT_SIZE.toFloat(), 0f, OUTPUT_SIZE.toFloat())
+        // The selected points are the outermost grid intersections, not the
+        // wooden board's outside edge. Map them to the first/last grid centers.
+        val edge = OUTPUT_SIZE - GRID_MARGIN
+        val destination = floatArrayOf(GRID_MARGIN, GRID_MARGIN, edge, GRID_MARGIN,
+            edge, edge, GRID_MARGIN, edge)
         val matrix = Matrix()
         require(matrix.setPolyToPoly(source, 0, destination, 0, 4))
         val warped = Bitmap.createBitmap(OUTPUT_SIZE, OUTPUT_SIZE, Bitmap.Config.ARGB_8888)
