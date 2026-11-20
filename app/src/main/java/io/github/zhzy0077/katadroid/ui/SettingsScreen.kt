@@ -12,6 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import android.app.Activity
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
 import android.media.projection.MediaProjectionManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,6 +72,14 @@ fun SettingsScreen(
             }
             ContextCompat.startForegroundService(context, captureIntent)
         }
+    }
+    val launchProjectionConsent = {
+        val projectionManager = context.getSystemService(MediaProjectionManager::class.java)
+        screenCaptureLauncher.launch(projectionManager.createScreenCaptureIntent())
+    }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) launchProjectionConsent()
+        else Toast.makeText(context, R.string.screen_capture_notifications_required, Toast.LENGTH_LONG).show()
     }
     var draftRule by rememberSaveable(rules) { mutableStateOf(rules) }
     var draftKomi by rememberSaveable(komi) { mutableStateOf(komi.toString()) }
@@ -139,8 +151,12 @@ fun SettingsScreen(
                     Text(resources.getString(R.string.floating_assistant_enable))
                 }
                 Button(onClick = {
-                    val projectionManager = context.getSystemService(MediaProjectionManager::class.java)
-                    screenCaptureLauncher.launch(projectionManager.createScreenCaptureIntent())
+                    if (Build.VERSION.SDK_INT >= 33 &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    } else {
+                        launchProjectionConsent()
+                    }
                 }, modifier = Modifier.fillMaxWidth().testTag("capture-screen-once")) {
                     Text(resources.getString(R.string.screen_capture_start))
                 }
