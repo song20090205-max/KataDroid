@@ -96,6 +96,8 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
             }
             importName = context.getString(R.string.board_capture_record_name)
             load(root)
+            // Choosing "Analyze this position" is an explicit request to start KataGo.
+            updatePreferences(preferences.copy(engineEnabled = true))
         }
     }
 
