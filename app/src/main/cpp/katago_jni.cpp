@@ -435,8 +435,24 @@ static jstring analyzeSearch(JNIEnv* env, jlong handle, jint visits, jint millis
         for (const auto& reply : replies) {
           if (opponentReplies.size() >= 3) break;
           if (reply.numVisits <= 0) continue;
-          // getAnalysisData(node) only reports legal children of that node.
-          opponentReplies.push_back({{"move", point(reply.move)}, {"visits", reply.numVisits}});
+          // AnalysisData values are reported from White's perspective.
+          // Convert them to the opponent-to-move perspective and compare with
+          // the evaluation immediately after our candidate move.
+          const Player opponent = getOpp(e.search->getRootPla());
+          const double opponentWinRate = opponent == P_BLACK
+              ? 50.0 * (1.0 - reply.winLossValue)
+              : 50.0 * (1.0 + reply.winLossValue);
+          const double candidateOpponentWinRate = opponent == P_BLACK
+              ? 50.0 * (1.0 - choice.winLossValue)
+              : 50.0 * (1.0 + choice.winLossValue);
+          const double opponentLead = opponent == P_BLACK ? -reply.lead : reply.lead;
+          opponentReplies.push_back({
+              {"move", point(reply.move)},
+              {"visits", reply.numVisits},
+              {"opponentWinRate", opponentWinRate},
+              {"winRateSwing", opponentWinRate - candidateOpponentWinRate},
+              {"opponentLead", opponentLead}
+          });
         }
       }
       result["candidates"].push_back({{"move", point(choice.move)}, {"visits", choice.numVisits},
