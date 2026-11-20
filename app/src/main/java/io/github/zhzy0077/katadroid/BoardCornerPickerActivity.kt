@@ -26,6 +26,8 @@ import kotlin.math.roundToInt
  */
 class BoardCornerPickerActivity : Activity() {
     private lateinit var picker: BoardCornerPickerView
+    private lateinit var root: LinearLayout
+    private var boardReview: BoardReviewView? = null
     private lateinit var status: TextView
     private lateinit var recognizeButton: Button
     private lateinit var resetButton: Button
@@ -35,7 +37,7 @@ class BoardCornerPickerActivity : Activity() {
         super.onCreate(savedInstanceState)
         val path = intent.getStringExtra(EXTRA_IMAGE_PATH) ?: return finish()
         val bitmap = BitmapFactory.decodeFile(path) ?: return finish()
-        val root = LinearLayout(this).apply {
+        root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(12), dp(8), dp(12), dp(12))
             setBackgroundColor(Color.rgb(18, 22, 28))
@@ -56,10 +58,15 @@ class BoardCornerPickerActivity : Activity() {
         resetButton = Button(this).apply {
             text = getString(R.string.board_capture_reset)
             setOnClickListener {
+                boardReview?.let { root.removeView(it) }
+                boardReview = null
+                picker.visibility = View.VISIBLE
                 picker.resetPoints()
                 recognized = null
+                status.typeface = Typeface.DEFAULT
                 status.text = getString(R.string.board_capture_corner_hint)
                 recognizeButton.text = getString(R.string.board_capture_recognize)
+                recognizeButton.setOnClickListener { recognizeBoard() }
                 recognizeButton.isEnabled = false
             }
         }
@@ -87,15 +94,27 @@ class BoardCornerPickerActivity : Activity() {
                 return
             }
         recognized = result
-        val lines = result.rows.joinToString("\n") { row -> row.joinToString(" ") }
-        status.text = getString(
-            R.string.board_capture_result,
-            result.blackCount, result.whiteCount, result.uncertainCount
-        ) + "\n" + lines
-        status.typeface = Typeface.MONOSPACE
+        picker.visibility = View.GONE
+        status.typeface = Typeface.DEFAULT
+        updateReviewStatus(result)
+        boardReview?.let { root.removeView(it) }
+        boardReview = BoardReviewView(this, result) { corrected ->
+            recognized = corrected
+            updateReviewStatus(corrected)
+        }
+        root.addView(boardReview, 1, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+        ))
         recognizeButton.text = getString(R.string.board_capture_analyze)
         recognizeButton.isEnabled = true
         recognizeButton.setOnClickListener { chooseNextPlayer() }
+    }
+
+    private fun updateReviewStatus(board: RecognizedBoard) {
+        status.text = getString(
+            R.string.board_capture_result,
+            board.blackCount, board.whiteCount, board.uncertainCount
+        ) + "\n點擊棋盤交叉點可循環切換：空位 → 黑棋 → 白棋。"
     }
 
     private fun chooseNextPlayer() {
@@ -178,6 +197,102 @@ private class BoardCornerPickerView(
         if (x !in 0f..sourceBitmap.width.toFloat() || y !in 0f..sourceBitmap.height.toFloat()) return true
         points += PointF(x, y)
         onPointsChanged(points.size)
+        invalidate()
+        return true
+    }
+}
+
+private class BoardReviewView(
+    context: android.content.Context,
+    initialBoard: RecognizedBoard,
+    private val onBoardChanged: (RecognizedBoard) -> Unit
+) : View(context) {
+    private var board = initialBoard
+    private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(65, 43, 25)
+        strokeWidth = 1.5f
+    }
+    private val woodPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(213, 174, 112)
+        style = Paint.Style.FILL
+    }
+    private val blackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(18, 18, 18)
+        style = Paint.Style.FILL
+    }
+    private val whitePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        style = Paint.Style.FILL
+    }
+    private val outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.DKGRAY
+        style = Paint.Style.STROKE
+        strokeWidth = 1.5f
+    }
+    private var boardRect = android.graphics.RectF()
+    private var spacing = 0f
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        canvas.drawColor(Color.rgb(25, 29, 35))
+        val side = minOf(width, height).toFloat() * 0.94f
+        val left = (width - side) / 2f
+        val top = (height - side) / 2f
+        boardRect.set(left, top, left + side, top + side)
+        canvas.drawRect(boardRect, woodPaint)
+        val inset = side * 0.045f
+        val startX = left + inset
+        val startY = top + inset
+        spacing = (side - 2f * inset) / 18f
+        for (i in 0 until 19) {
+            val x = startX + i * spacing
+            val y = startY + i * spacing
+            canvas.drawLine(x, startY, x, startY + 18f * spacing, gridPaint)
+            canvas.drawLine(startX, y, startX + 18f * spacing, y, gridPaint)
+        }
+        val star = intArrayOf(3, 9, 15)
+        star.forEach { row -> star.forEach { col ->
+            canvas.drawCircle(startX + col * spacing, startY + row * spacing,
+                spacing * 0.09f, gridPaint)
+        } }
+        for (row in 0 until 19) for (col in 0 until 19) {
+            val x = startX + col * spacing
+            val y = startY + row * spacing
+            val radius = spacing * 0.43f
+            when (board.rows[row][col]) {
+                'X' -> {
+                    canvas.drawCircle(x, y, radius, blackPaint)
+                    canvas.drawCircle(x, y, radius, outlinePaint)
+                }
+                'O' -> {
+                    canvas.drawCircle(x, y, radius, whitePaint)
+                    canvas.drawCircle(x, y, radius, outlinePaint)
+                }
+            }
+        }
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action != MotionEvent.ACTION_UP || spacing <= 0f) return true
+        val inset = boardRect.width() * 0.045f
+        val startX = boardRect.left + inset
+        val startY = boardRect.top + inset
+        val col = ((event.x - startX) / spacing).roundToInt()
+        val row = ((event.y - startY) / spacing).roundToInt()
+        if (row !in 0..18 || col !in 0..18) return true
+        val x = startX + col * spacing
+        val y = startY + row * spacing
+        if (kotlin.math.abs(event.x - x) > spacing * 0.48f ||
+            kotlin.math.abs(event.y - y) > spacing * 0.48f) return true
+        val nextRows = board.rows.map { it.toMutableList() }.toMutableList()
+        nextRows[row][col] = when (nextRows[row][col]) {
+            '.' -> 'X'
+            'X' -> 'O'
+            'O' -> '.'
+            else -> '.'
+        }
+        board = RecognizedBoard(nextRows)
+        onBoardChanged(board)
         invalidate()
         return true
     }
