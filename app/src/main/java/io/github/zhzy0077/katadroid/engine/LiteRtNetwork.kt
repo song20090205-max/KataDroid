@@ -206,14 +206,14 @@ class KataGoSession private constructor(private val runtime: LiteRtNetwork, priv
 
     companion object {
         fun open(context: Context, accelerator: Accelerator = Accelerator.CPU,
-                 model: KataGoModel = KataGoModel.B6): KataGoSession {
+                 model: KataGoModel = KataGoModel.B6, searchThreads: Int = 1): KataGoSession {
             val runtime = LiteRtNetwork.open(context, accelerator, model)
             try {
                 // Imported packages require the CPU reference tolerance on every backend.
                 if (accelerator == Accelerator.GPU || (model.directory != null && accelerator != Accelerator.CPU))
                     ModelValidation.verify(runtime, ModelValidation.fixtures(context, model))
                 return KataGoSession(runtime, NativeKataGo.create(runtime, runtime.descriptor.absolutePath,
-                    model.descriptorName, model.contract.modelVersion))
+                    model.descriptorName, model.contract.modelVersion, searchThreads.coerceIn(1, 4)))
             } catch (error: Throwable) { runtime.close(); throw error }
         }
     }
