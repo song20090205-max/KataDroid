@@ -266,4 +266,9 @@
     <string name="floating_assistant_stop">停止懸浮助手</string>
     <string name="floating_assistant_notification_title">KataGo 懸浮助手</string>
     <string name="floating_assistant_notification_text">懸浮控制鈕正在顯示。點選可返回應用程式。</string>
+    <string name="screen_capture_start">擷取一次螢幕畫面（需系統授權）</string>
+    <string name="screen_capture_title">KataGo 螢幕擷取</string>
+    <string name="screen_capture_working">已取得授權，正在擷取單張畫面…</string>
+    <string name="screen_capture_complete">擷取完成，點選通知預覽畫面。</string>
+    <string name="screen_capture_preview_description">你已授權擷取的螢幕畫面預覽</string>
 </resources>
