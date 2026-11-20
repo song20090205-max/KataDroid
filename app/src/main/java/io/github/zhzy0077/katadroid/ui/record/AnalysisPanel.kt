@@ -93,7 +93,8 @@ fun AnalysisPanel(state: RecordUiState, engine: EngineUiState, enabled: Boolean,
                 val replies = candidate.opponentReplies.map { reply ->
                     val move = BoardPoint.fromIndex(reply.move)?.label ?: resources.getString(R.string.pass_move)
                     val swing = if (reply.winRateSwing >= 0f) "+" else ""
-                    "$move（對手勝率評估 $swing${reply.winRateSwing.oneDecimal()}%、${reply.visits}訪）"
+                    val risk = if (reply.winRateSwing >= 5f) "｜需留意" else ""
+                    "$move（對手勝率評估 $swing${reply.winRateSwing.oneDecimal()} 個百分點、領先 ${reply.opponentLead.oneDecimal()} 目、${reply.visits}訪$risk）"
                 }.ifEmpty {
                     listOfNotNull(candidate.pv.getOrNull(1)?.let { reply ->
                         BoardPoint.fromIndex(reply)?.label ?: resources.getString(R.string.pass_move)
