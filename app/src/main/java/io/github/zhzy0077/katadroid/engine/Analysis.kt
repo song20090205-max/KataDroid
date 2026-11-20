@@ -68,8 +68,17 @@ data class AnalysisPosition(
     }
 }
 
-data class AnalysisReply(val move: Int, val visits: Int) {
+data class AnalysisReply(
+    val move: Int,
+    val visits: Int,
+    val opponentWinRate: Float,
+    val winRateSwing: Float,
+    val opponentLead: Float,
+) {
     fun json() = JSONObject().put("move", move).put("visits", visits)
+        .put("opponentWinRate", opponentWinRate)
+        .put("winRateSwing", winRateSwing)
+        .put("opponentLead", opponentLead)
 }
 
 data class AnalysisCandidate(
@@ -128,8 +137,13 @@ data class PositionAnalysis(
                 val repliesJson = entry.optJSONArray("opponentReplies")
                 val replies = if (repliesJson == null) emptyList() else List(repliesJson.length().coerceAtMost(3)) { index ->
                     val reply = repliesJson.getJSONObject(index)
-                    AnalysisReply(reply.getInt("move").also { require(it in 0..PASS) },
-                        reply.getInt("visits").also { require(it > 0) })
+                    AnalysisReply(
+                        reply.getInt("move").also { require(it in 0..PASS) },
+                        reply.getInt("visits").also { require(it > 0) },
+                        reply.getDouble("opponentWinRate").toFloat().also { require(it.isFinite() && it in 0f..100f) },
+                        reply.getDouble("winRateSwing").toFloat().also { require(it.isFinite() && it in -100f..100f) },
+                        reply.getDouble("opponentLead").toFloat().also { require(it.isFinite()) },
+                    )
                 }
                 AnalysisCandidate(('A' + i).toString(), move, entry.getInt("visits").also { require(it > 0) },
                     winRate(entry), value(entry, "blackLead"), pv, replies)
