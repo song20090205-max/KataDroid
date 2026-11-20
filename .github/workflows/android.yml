@@ -50,9 +50,11 @@ jobs:
           ANDROID_I_WANT_MY_TCG: yes
         with:
           api-level: 35
-          target: google_apis
+          target: google_atd
           arch: x86_64
           profile: pixel_2
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
             ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest --console=plain
