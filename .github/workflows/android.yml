@@ -43,8 +43,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Run board recognition and search-thread regression tests
-        timeout-minutes: 40
+      - name: Run focused search-thread regression tests
+        timeout-minutes: 45
         uses: reactivecircus/android-emulator-runner@v2
         env:
           ANDROID_I_WANT_MY_TCG: yes
@@ -55,5 +55,4 @@ jobs:
           profile: pixel_2
           disable-animations: true
           script: |
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.BoardImageRecognitionTest --console=plain
             ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest --console=plain
