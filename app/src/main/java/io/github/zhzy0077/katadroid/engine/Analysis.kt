@@ -68,6 +68,10 @@ data class AnalysisPosition(
     }
 }
 
+data class AnalysisReply(val move: Int, val visits: Int) {
+    fun json() = JSONObject().put("move", move).put("visits", visits)
+}
+
 data class AnalysisCandidate(
     val label: String,
     val move: Int,
@@ -75,6 +79,7 @@ data class AnalysisCandidate(
     val blackWinRate: Float,
     val blackLead: Float,
     val pv: List<Int>,
+    val opponentReplies: List<AnalysisReply> = emptyList(),
 ) {
     fun winRateFor(player: Int): Float {
         require(player in 1..2)
@@ -83,6 +88,7 @@ data class AnalysisCandidate(
 
     fun json() = JSONObject().put("move", move).put("visits", visits)
         .put("blackWinRate", blackWinRate).put("blackLead", blackLead).put("pv", JSONArray(pv))
+        .put("opponentReplies", JSONArray(opponentReplies.map { it.json() }))
 }
 
 data class PositionAnalysis(
@@ -119,8 +125,14 @@ data class PositionAnalysis(
                         "Invalid principal variation for $move: $it"
                     }
                 }
+                val repliesJson = entry.optJSONArray("opponentReplies")
+                val replies = if (repliesJson == null) emptyList() else List(repliesJson.length().coerceAtMost(3)) { index ->
+                    val reply = repliesJson.getJSONObject(index)
+                    AnalysisReply(reply.getInt("move").also { require(it in 0..PASS) },
+                        reply.getInt("visits").also { require(it > 0) })
+                }
                 AnalysisCandidate(('A' + i).toString(), move, entry.getInt("visits").also { require(it > 0) },
-                    winRate(entry), value(entry, "blackLead"), pv)
+                    winRate(entry), value(entry, "blackLead"), pv, replies)
             }
             return PositionAnalysis(position, visits, winRate(json), value(json, "blackLead"),
                 value(json, "blackScoreMean"), candidates, backend, finished,
