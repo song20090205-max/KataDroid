@@ -15,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -32,6 +33,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun KataDroidApp() {
     val resources = LocalResources.current
+    val hostContext = LocalContext.current
     val document: RecordViewModel = viewModel()
     val record = document.record
     val settings = document.preferences
@@ -54,6 +56,17 @@ fun KataDroidApp() {
     }
     val history = if (autoTurn || record.preview != null) emptyList() else recordHistory
     val snackbar = remember { SnackbarHostState() }
+
+    LaunchedEffect(hostContext) {
+        val activity = hostContext as? android.app.Activity
+        val recognizedSgf = activity?.intent?.getStringExtra(io.github.zhzy0077.katadroid.BoardCornerPickerActivity.EXTRA_IMPORTED_SGF)
+        if (!recognizedSgf.isNullOrBlank()) {
+            activity.intent.removeExtra(io.github.zhzy0077.katadroid.BoardCornerPickerActivity.EXTRA_IMPORTED_SGF)
+            document.importSgfText(recognizedSgf)
+            page = 0
+            viewport.initialized = false
+        }
+    }
 
     val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         pickerOpen = false
