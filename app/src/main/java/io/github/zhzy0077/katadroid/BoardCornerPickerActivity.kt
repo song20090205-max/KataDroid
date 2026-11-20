@@ -337,22 +337,31 @@ private object GoBoardImageRecognizer {
 
     fun recognize(bitmap: Bitmap, corners: List<PointF>): RecognizedBoard {
         require(corners.size == 4)
-        // Reject crossed, duplicated or nearly collinear corner selections before
-        // applying a perspective transform; these produce shifted/mirrored stones.
+        // Normalize arbitrary tap order into image-clockwise TL, TR, BR, BL.
+        // This prevents a user's tap sequence from rotating or mirroring the SGF.
+        val centerX = corners.map { it.x }.average().toFloat()
+        val centerY = corners.map { it.y }.average().toFloat()
+        val ordered = corners.sortedBy {
+            atan2((it.y - centerY).toDouble(), (it.x - centerX).toDouble())
+        }.toMutableList()
+        val topLeftIndex = ordered.indices.minBy { i ->
+            ordered[i].x + ordered[i].y
+        }
+        val clockwise = (ordered.drop(topLeftIndex) + ordered.take(topLeftIndex))
         fun cross(a: PointF, b: PointF, c: PointF): Float =
             (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x)
-        val turns = corners.indices.map { i ->
-            cross(corners[i], corners[(i + 1) % 4], corners[(i + 2) % 4])
+        val turns = clockwise.indices.map { i ->
+            cross(clockwise[i], clockwise[(i + 1) % 4], clockwise[(i + 2) % 4])
         }
-        require(turns.all { it > 1f }) { "Corners must be selected clockwise from top-left" }
-        val edgeLengths = corners.indices.map { i ->
-            val a = corners[i]
-            val b = corners[(i + 1) % 4]
+        require(turns.all { it > 1f }) { "Selected points do not form a convex board" }
+        val edgeLengths = clockwise.indices.map { i ->
+            val a = clockwise[i]
+            val b = clockwise[(i + 1) % 4]
             kotlin.math.hypot((b.x - a.x).toDouble(), (b.y - a.y).toDouble())
         }
         require(edgeLengths.all { it >= 40.0 }) { "Selected board corners are too close" }
         val source = FloatArray(8)
-        corners.forEachIndexed { index, point ->
+        clockwise.forEachIndexed { index, point ->
             source[index * 2] = point.x
             source[index * 2 + 1] = point.y
         }
