@@ -63,8 +63,11 @@ jobs:
             mkdir -p test-diagnostics
             adb shell getprop sys.boot_completed > test-diagnostics/emulator-health.txt
             adb shell cmd package list packages > test-diagnostics/package-service-health.txt
-            adb shell mkdir -p /sdcard/Android/data/io.github.zhzy0077.katadroid/files
-            adb push "$MODEL_PATH" /sdcard/Android/data/io.github.zhzy0077.katadroid/files/
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb push "$MODEL_PATH" /data/local/tmp/tf2-b10c384-s2941M-d5872M.kdmodel
+            adb shell run-as io.github.zhzy0077.katadroid mkdir -p files
+            adb shell run-as io.github.zhzy0077.katadroid cp /data/local/tmp/tf2-b10c384-s2941M-d5872M.kdmodel files/
+            adb shell run-as io.github.zhzy0077.katadroid ls -l files/tf2-b10c384-s2941M-d5872M.kdmodel
             adb logcat -c
             ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest,io.github.zhzy0077.katadroid.ModelBenchmarkTest,io.github.zhzy0077.katadroid.OptionalModelIntegrationTest -Pandroid.testInstrumentationRunnerArguments.modelPackage=tf2-b10c384-s2941M-d5872M.kdmodel --console=plain --info > test-diagnostics/instrumented-tests.log 2>&1
             echo "instrumentation_exit=$?" > test-diagnostics/instrumented-tests.exitcode
