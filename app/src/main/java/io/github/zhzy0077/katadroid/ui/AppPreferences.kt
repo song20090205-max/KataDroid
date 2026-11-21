@@ -8,6 +8,7 @@ import io.github.zhzy0077.katadroid.engine.validKomi
 import io.github.zhzy0077.katadroid.engine.EngineBackend
 import io.github.zhzy0077.katadroid.engine.EngineConfig
 import io.github.zhzy0077.katadroid.engine.KataGoModel
+import io.github.zhzy0077.katadroid.engine.ComputeMode
 
 enum class ComputeProfile(val searchThreads: Int) {
     POWER_SAVING(1),
@@ -32,8 +33,10 @@ data class AppPreferences(
     val model: KataGoModel = KataGoModel.B6,
     val backend: EngineBackend = EngineBackend.AUTO,
     val computeProfile: ComputeProfile = ComputeProfile.POWER_SAVING,
+    val computeMode: ComputeMode = ComputeMode.LOCAL,
+    val cloudEndpoint: String = "",
 ) {
-    val engineConfig get() = EngineConfig(model, backend, computeProfile.searchThreads)
+    val engineConfig get() = EngineConfig(model, backend, computeProfile.searchThreads, computeMode, cloudEndpoint)
     fun automatic(color: Int) = if (color == 1) autoBlack else autoWhite
     val hasAutomaticPlayer get() = autoBlack || autoWhite
     val showCandidateMoves get() = candidates && !hasAutomaticPlayer
@@ -46,6 +49,8 @@ data class AppPreferences(
         putString("rules", rules.id); putFloat("komi", komi)
         putString("model", model.id); putString("backend", backend.name)
         putString("compute_profile", computeProfile.name)
+        putString("compute_mode", computeMode.name)
+        putString("cloud_endpoint", cloudEndpoint)
     }
 
     companion object {
@@ -58,7 +63,9 @@ data class AppPreferences(
                 runCatching { GoRules.fromId(p.getString("rules", "chinese")!!) }.getOrDefault(GoRules.CHINESE),
                 p.getFloat("komi", 7.5f).takeIf(::validKomi) ?: 7.5f,
                 KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)),
-                ComputeProfile.fromId(p.getString("compute_profile", null)))
+                ComputeProfile.fromId(p.getString("compute_profile", null)),
+                runCatching { ComputeMode.valueOf(p.getString("compute_mode", "LOCAL")!!) }.getOrDefault(ComputeMode.LOCAL),
+                p.getString("cloud_endpoint", "") ?: "")
         }
     }
 }
