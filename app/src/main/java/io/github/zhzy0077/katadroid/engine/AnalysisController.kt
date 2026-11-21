@@ -1,6 +1,7 @@
 package io.github.zhzy0077.katadroid.engine
 
 import io.github.zhzy0077.katadroid.NpuProbe
+import com.google.ai.edge.litert.Accelerator
 import android.app.Application
 import android.os.SystemClock
 import android.util.Log
