@@ -22,7 +22,7 @@ class BackendFallbackTest {
         override fun close() = Unit
     }
 
-    @Test fun autoFallsBackWhenThePackagedRuntimeCannotLoadAndExplicitNpuDoesNot() {
+    @Test fun autoTriesGpuAfterNpuAndExplicitNpuDoesNotFallback() {
         val attempts = mutableListOf<Accelerator>()
         val open: (Accelerator) -> AnalysisSession = {
             attempts += it
@@ -30,13 +30,26 @@ class BackendFallbackTest {
             session()
         }
         openSelectedSession(EngineConfig(), true, open).use { assertEquals("CPU", it.backend) }
-        assertEquals(listOf(Accelerator.NPU, Accelerator.GPU, Accelerator.CPU), attempts)
+        assertEquals(listOf(Accelerator.NPU, Accelerator.GPU), attempts)
         attempts.clear()
-        openSelectedSession(EngineConfig(backend = EngineBackend.NPU), true, open)
+        assertThrows(UnsatisfiedLinkError::class.java) {
+            openSelectedSession(EngineConfig(backend = EngineBackend.NPU), true, open)
+        }
         assertEquals(listOf(Accelerator.NPU), attempts)
         attempts.clear()
         openSelectedSession(EngineConfig(), false, open).close()
-        assertEquals(listOf(Accelerator.GPU, Accelerator.CPU), attempts)
+        assertEquals(listOf(Accelerator.GPU), attempts)
+    }
+
+    @Test fun autoFallsBackToCpuWhenGpuCannotCompileOrValidate() {
+        val attempts = mutableListOf<Accelerator>()
+        val open: (Accelerator) -> AnalysisSession = {
+            attempts += it
+            if (it != Accelerator.CPU) throw IllegalStateException("Backend rejected")
+            session()
+        }
+        openSelectedSession(EngineConfig(), true, open).use { assertEquals("CPU", it.backend) }
+        assertEquals(listOf(Accelerator.NPU, Accelerator.GPU, Accelerator.CPU), attempts)
     }
 
     @Test fun autoPersistsAndBenchmarksTheActualBackendWithoutMixingNpuResults() = runBlocking {
