@@ -277,4 +277,20 @@
     <string name="black_to_play">黑棋行棋</string>
     <string name="white_to_play">白棋行棋</string>
     <string name="board_capture_record_name">螢幕辨識棋局</string>
+
+    <string name="compute_mode">運算模式</string>
+    <string name="compute_local">手機本機</string>
+    <string name="compute_cloud">雲端</string>
+    <string name="compute_hybrid">混合</string>
+    <string name="cloud_endpoint">雲端伺服器網址</string>
+    <string name="cloud_token">雲端 API Token</string>
+    <string name="cloud_token_saved">Token 已使用 Android Keystore 加密儲存。</string>
+    <string name="cloud_token_missing">尚未設定雲端 Token。</string>
+    <string name="cloud_model_note">雲端模式使用伺服器端模型；手機模型只用於本機模式及混合模式備援。</string>
+    <string name="cloud_save">儲存雲端設定</string>
+    <string name="cloud_clear_token">清除 Token</string>
+    <string name="cloud_https_hint">遠端連線只允許 HTTPS。請輸入伺服器根網址，不要附加 /v1/analyze。</string>
+    <string name="cloud_save_failed">無法儲存雲端設定。</string>
+    <string name="backend_local_fallback_hint">裝置選擇只影響手機本機運算及混合模式的本機備援。</string>
+
 </resources>
