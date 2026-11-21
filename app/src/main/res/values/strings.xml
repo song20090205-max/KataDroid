@@ -298,7 +298,7 @@
     <string name="cloud_clear_token">Clear token</string>
     <string name="cloud_https_hint">Remote connections require HTTPS. Enter the server base URL without /v1/analyze.</string>
     <string name="cloud_save_failed">Could not save cloud settings.</string>
-    <string name="backend_local_fallback_hint">The device selection applies only to Local mode and Hybrid's on-device fallback.</string>
+    <string name="backend_local_fallback_hint">The device selection applies only to Local mode and the on-device fallback in Hybrid mode.</string>
 
     <string name="cloud_server_model">Cloud server model</string>
 </resources>
