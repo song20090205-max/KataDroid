@@ -17,10 +17,20 @@ internal fun openSelectedSession(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            Log.w("KataDroidEngine", "NPU initialization unavailable; AUTO is using CPU", error)
+            Log.w("KataDroidEngine", "NPU initialization unavailable; AUTO will try GPU", error)
         } catch (error: LinkageError) {
-            Log.w("KataDroidEngine", "NPU runtime could not load; AUTO is using CPU", error)
+            Log.w("KataDroidEngine", "NPU runtime could not load; AUTO will try GPU", error)
         }
+    }
+    try {
+        // AUTO's session factory requests FP16; reference fixtures gate the backend.
+        return open(Accelerator.GPU)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        Log.w("KataDroidEngine", "GPU initialization or reference validation unavailable; AUTO is using CPU", error)
+    } catch (error: LinkageError) {
+        Log.w("KataDroidEngine", "GPU runtime could not load; AUTO is using CPU", error)
     }
     return open(Accelerator.CPU)
 }
