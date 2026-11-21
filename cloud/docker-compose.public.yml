@@ -1,0 +1,24 @@
+services:
+  caddy:
+    image: caddy:2
+    container_name: katago-cloud-https
+    restart: unless-stopped
+    environment:
+      CADDY_DOMAIN: ${CADDY_DOMAIN:?Set CADDY_DOMAIN to a DNS name pointing at this server}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - katago-cloud
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+
+volumes:
+  caddy_data:
+  caddy_config:
