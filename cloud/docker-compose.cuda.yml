@@ -1,0 +1,36 @@
+services:
+  katago-cloud:
+    build:
+      context: .
+      dockerfile: Dockerfile.cuda
+    image: katago-cloud-engine:cuda
+    container_name: katago-cloud-engine
+    restart: unless-stopped
+    init: true
+    environment:
+      KATAGO_BIN: /usr/local/bin/katago
+      KATAGO_CONFIG: /opt/katago/analysis_example.cfg
+      KATAGO_MODEL: /models/model.bin.gz
+      KATAGO_API_TOKEN: ${KATAGO_API_TOKEN:?Set KATAGO_API_TOKEN in your environment}
+      KATAGO_MAX_CONCURRENT: "1"
+      KATAGO_DEFAULT_MAX_VISITS: "1200"
+      KATAGO_HARD_MAX_VISITS: "100000"
+    volumes:
+      - ./models:/models:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
