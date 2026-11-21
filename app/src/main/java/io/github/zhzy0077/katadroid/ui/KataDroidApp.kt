@@ -159,8 +159,10 @@ fun KataDroidApp() {
                         document.updatePreferences(updated)
                         engine.controller.setTarget(position, updated.engineEnabled, visible = false,
                             maxVisits = updated.maxVisits, config = updated.engineConfig)
+                        true
                     } catch (error: Exception) {
                         document.message = error.message ?: resources.getString(R.string.cloud_save_failed)
+                        false
                     }
                 },
                 onClearCloudToken = { CloudTokenStore.clear(hostContext) },
