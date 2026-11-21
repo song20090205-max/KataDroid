@@ -79,7 +79,7 @@ class AnalysisController(
                     if (command.cancelled.get()) continue
                     try {
                         if (loadedCacheGeneration != command.cacheGeneration) {
-                            val restored = store.load(request.config)
+                            val restored = if (request.config.computeMode == ComputeMode.LOCAL) store.load(request.config) else emptyMap()
                             if (publish(command) { it.copy(analyses = restored) }) {
                                 loadedCacheGeneration = command.cacheGeneration
                                 loadedConfig = request.config
@@ -127,9 +127,9 @@ class AnalysisController(
                         }
                         if (command.cancelled.get()) continue
                         val activeSession = checkNotNull(session)
-                        val actualConfig = resolvedConfig(request.config, activeSession)
+                        val actualConfig = if (request.config.computeMode == ComputeMode.LOCAL) resolvedConfig(request.config, activeSession) else request.config
                         if (loadedConfig != actualConfig) {
-                            val restored = store.load(actualConfig)
+                            val restored = if (request.config.computeMode == ComputeMode.LOCAL) store.load(actualConfig) else emptyMap()
                             if (publish(command) { it.copy(analyses = restored) }) loadedConfig = actualConfig
                         }
                         val retainedKeys = request.history.map { it.key }.toSet() + request.position.key
@@ -295,9 +295,10 @@ class AnalysisController(
     }
 
     private fun resolvedConfig(config: EngineConfig, session: AnalysisSession): EngineConfig =
-        config.copy(backend = EngineBackend.valueOf(session.backend))
+        EngineBackend.entries.firstOrNull { it.name == session.backend }?.let { config.copy(backend = it) } ?: config
 
     private fun saveCache(command: Command, actualConfig: EngineConfig) {
+        if (command.request.config.computeMode != ComputeMode.LOCAL) return
         try {
             // Capture under the same epoch: a concurrent model switch must never
             // write another model's map into this namespace.
@@ -339,7 +340,8 @@ internal fun visitTargets(limit: Int): List<Int> = buildList {
 class KataGoViewModel(application: Application) : AndroidViewModel(application) {
     val controller = AnalysisController(
         factory = { config ->
-            openSelectedSession(config, NpuProbe.hasRuntimeLibraries(application)) { accelerator ->
+            val localFactory = {
+                openSelectedSession(config.copy(computeMode = ComputeMode.LOCAL), NpuProbe.hasRuntimeLibraries(application)) { accelerator ->
                 if (accelerator == Accelerator.GPU) {
                     openValidatedGpuSession { precision ->
                         KataGoSession.open(application, accelerator, config.model, config.searchThreads,
@@ -348,6 +350,14 @@ class KataGoViewModel(application: Application) : AndroidViewModel(application) 
                 } else {
                     KataGoSession.open(application, accelerator, config.model, config.searchThreads)
                 }
+            }
+            when (config.computeMode) {
+                ComputeMode.LOCAL -> localFactory()
+                ComputeMode.CLOUD -> CloudAnalysisSession(config.cloudEndpoint, CloudTokenStore.read(application).orEmpty())
+                ComputeMode.HYBRID -> HybridAnalysisSession(
+                    CloudAnalysisSession(config.cloudEndpoint, CloudTokenStore.read(application).orEmpty()),
+                    localFactory,
+                )
             }
         },
         store = FileAnalysisStore(File(application.filesDir, "analysis-cache.json")),
