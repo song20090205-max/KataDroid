@@ -4,5 +4,5 @@
     @api path /v1/*
     reverse_proxy @api katago-cloud:8080
 
-    respond 404
+    respond "Not Found" 404
 }
