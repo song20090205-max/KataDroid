@@ -284,4 +284,20 @@
     <string name="black_to_play">黑棋行棋</string>
     <string name="white_to_play">白棋行棋</string>
     <string name="board_capture_record_name">螢幕辨識棋局</string>
+
+    <string name="compute_mode">计算模式</string>
+    <string name="compute_local">手机本机</string>
+    <string name="compute_cloud">云端</string>
+    <string name="compute_hybrid">混合</string>
+    <string name="cloud_endpoint">云端服务器网址</string>
+    <string name="cloud_token">云端 API Token</string>
+    <string name="cloud_token_saved">Token 已使用 Android Keystore 加密保存。</string>
+    <string name="cloud_token_missing">尚未设置云端 Token。</string>
+    <string name="cloud_model_note">云端模式使用服务器端模型；手机模型只用于本机模式及混合模式备援。</string>
+    <string name="cloud_save">保存云端设置</string>
+    <string name="cloud_clear_token">清除 Token</string>
+    <string name="cloud_https_hint">远程连接只允许 HTTPS。请输入服务器根网址，不要附加 /v1/analyze。</string>
+    <string name="cloud_save_failed">无法保存云端设置。</string>
+    <string name="backend_local_fallback_hint">设备选择只影响手机本机运算及混合模式的本机备援。</string>
+
 </resources>
