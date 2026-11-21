@@ -70,19 +70,28 @@ class LiteRtNetwork private constructor(
             executor.submit(Callable { block() }).get()
         } catch (error: ExecutionException) { throw (error.cause ?: error) }
 
-        fun open(context: Context, accelerator: Accelerator = Accelerator.CPU,
-                 modelSpec: KataGoModel = KataGoModel.B6): LiteRtNetwork {
-            if (accelerator != Accelerator.GPU) return openDirect(context, accelerator, modelSpec)
+        fun open(
+            context: Context,
+            accelerator: Accelerator = Accelerator.CPU,
+            modelSpec: KataGoModel = KataGoModel.B6,
+            gpuPrecision: CompiledModel.GpuOptions.Precision = CompiledModel.GpuOptions.Precision.FP32,
+        ): LiteRtNetwork {
+            if (accelerator != Accelerator.GPU) return openDirect(context, accelerator, modelSpec, gpuPrecision)
             // OpenGL implementations require compile, invocation, readback and
             // destruction on one context-owning thread. Native NN callbacks join
             // this executor instead of migrating the GPU context across threads.
             val executor = Executors.newSingleThreadExecutor { Thread(it, "katadroid-gpu") }
-            try { return onThread(executor) { openDirect(context, accelerator, modelSpec) }
+            try { return onThread(executor) { openDirect(context, accelerator, modelSpec, gpuPrecision) }
                 .also { it.gpuExecutor = executor } }
             catch (error: Throwable) { executor.shutdown(); throw error }
         }
 
-        private fun openDirect(context: Context, accelerator: Accelerator, modelSpec: KataGoModel): LiteRtNetwork {
+        private fun openDirect(
+            context: Context,
+            accelerator: Accelerator,
+            modelSpec: KataGoModel,
+            gpuPrecision: CompiledModel.GpuOptions.Precision,
+        ): LiteRtNetwork {
             require(accelerator in listOf(Accelerator.CPU, Accelerator.GPU, Accelerator.NPU))
             val descriptor = prepareModel(context, modelSpec)
             val npu = accelerator == Accelerator.NPU
@@ -96,7 +105,7 @@ class LiteRtNetwork private constructor(
             var compiled: CompiledModel? = null
             val allocated = mutableListOf<TensorBuffer>()
             try {
-                val options = NpuProbe.options(context, accelerator)
+                val options = NpuProbe.options(context, accelerator, gpuPrecision)
                 val model = modelSpec.directory?.let {
                     CompiledModel.create(File(it, "model.tflite").absolutePath, options, environment)
                 } ?: CompiledModel.create(context.assets, modelSpec.asset, options, environment)
@@ -205,9 +214,14 @@ class KataGoSession private constructor(private val runtime: LiteRtNetwork, priv
     }
 
     companion object {
-        fun open(context: Context, accelerator: Accelerator = Accelerator.CPU,
-                 model: KataGoModel = KataGoModel.B6, searchThreads: Int = 1): KataGoSession {
-            val runtime = LiteRtNetwork.open(context, accelerator, model)
+        fun open(
+            context: Context,
+            accelerator: Accelerator = Accelerator.CPU,
+            model: KataGoModel = KataGoModel.B6,
+            searchThreads: Int = 1,
+            gpuPrecision: CompiledModel.GpuOptions.Precision = CompiledModel.GpuOptions.Precision.FP32,
+        ): KataGoSession {
+            val runtime = LiteRtNetwork.open(context, accelerator, model, gpuPrecision)
             try {
                 // Imported packages require the CPU reference tolerance on every backend.
                 if (accelerator == Accelerator.GPU || (model.directory != null && accelerator != Accelerator.CPU))
