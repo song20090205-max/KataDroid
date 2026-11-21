@@ -151,7 +151,11 @@ class AnalysisController(
                         activeSession.setPosition(request.position)
                         publish(command) { it.copy(phase = EnginePhase.ANALYZING) }
                         val timed = activeSession.supportsTimedAnalysis
-                        val targets = if (timed) generateSequence { request.maxVisits } else visitTargets(request.maxVisits).asSequence()
+                        val targets = when {
+                            timed -> generateSequence { request.maxVisits }
+                            request.config.computeMode == ComputeMode.LOCAL -> visitTargets(request.maxVisits).asSequence()
+                            else -> sequenceOf(request.maxVisits)
+                        }
                         for (visits in targets) {
                             if (command.cancelled.get()) break
                             val started = System.nanoTime()
