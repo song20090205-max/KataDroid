@@ -26,10 +26,9 @@ API_TOKEN = os.getenv("KATAGO_API_TOKEN", "")
 MAX_CONCURRENT = max(1, int(os.getenv("KATAGO_MAX_CONCURRENT", "1")))
 DEFAULT_MAX_VISITS = max(1, int(os.getenv("KATAGO_DEFAULT_MAX_VISITS", "1200")))
 HARD_MAX_VISITS = max(DEFAULT_MAX_VISITS, int(os.getenv("KATAGO_HARD_MAX_VISITS", "100000")))
-HARD_MAX_TIME = max(1, int(os.getenv("KATAGO_HARD_MAX_TIME_SECONDS", "120")))
 PROCESS_START_TIMEOUT = 30
 MAX_LINE_BYTES = 2 * 1024 * 1024
-COORD_RE = re.compile(r"^[A-HJ-Z]{1,2}[1-9][0-9]?$", re.IGNORECASE)
+COORD_RE = re.compile(r"^[A-HJ-Z][1-9][0-9]?$", re.IGNORECASE)
 
 
 class AnalyzeRequest(BaseModel):
@@ -55,6 +54,13 @@ class AnalyzeRequest(BaseModel):
             expected = "W" if self.moves[-1][0] == "B" else "B"
             if self.to_move != expected:
                 raise ValueError("to_move does not match the supplied move history")
+        for _, coord in [*self.moves, *self.initial_stones]:
+            if coord.lower() == "pass":
+                continue
+            col = ord(coord[0].upper()) - ord("A") - (1 if coord[0].upper() > "I" else 0)
+            row = int(coord[1:])
+            if col >= self.board_x_size or row > self.board_y_size:
+                raise ValueError(f"Coordinate {coord} is outside the board")
         return self
 
     @field_validator("moves")
@@ -84,13 +90,18 @@ class KataGoProcess:
     def __init__(self) -> None:
         self.process: asyncio.subprocess.Process | None = None
         self.lock = asyncio.Lock()
+        self.start_lock = asyncio.Lock()
         self.stderr_task: asyncio.Task | None = None
         self.model_sha256: str | None = None
         self.started_at: float | None = None
 
     async def start(self) -> None:
-        if self.process and self.process.returncode is None:
-            return
+        async with self.start_lock:
+            if self.process and self.process.returncode is None:
+                return
+            await self._start_locked()
+
+    async def _start_locked(self) -> None:
         if not KATAGO_CONFIG.is_file():
             raise EngineUnavailable(f"Missing KataGo config: {KATAGO_CONFIG}")
         if not KATAGO_MODEL.is_file():
@@ -103,6 +114,7 @@ class KataGoProcess:
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
+                    limit=MAX_LINE_BYTES,
                 ),
                 timeout=PROCESS_START_TIMEOUT,
             )
@@ -166,7 +178,7 @@ class KataGoProcess:
                         raise EngineUnavailable(f"KataGo analysis error: {item['error']}")
                     if item.get("isDuringSearch") is False:
                         return item
-            except (asyncio.TimeoutError, EngineUnavailable):
+            except (asyncio.TimeoutError, EngineUnavailable, asyncio.CancelledError):
                 await self.stop()
                 raise
             except Exception:
@@ -218,8 +230,9 @@ async def healthz() -> dict:
 @app.get("/v1/readyz", dependencies=[Depends(require_token)])
 async def readyz() -> dict:
     try:
-        await engine.start()
-        checksum = model_sha256()
+        async with engine.lock:
+            await engine.start()
+            checksum = model_sha256()
     except (EngineUnavailable, OSError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return {
@@ -260,10 +273,16 @@ async def analyze(request: AnalyzeRequest) -> dict:
 
     started = time.monotonic()
     try:
-        async with semaphore:
+        try:
+            await asyncio.wait_for(semaphore.acquire(), timeout=20.0)
+        except asyncio.TimeoutError as exc:
+            raise HTTPException(status_code=429, detail="Cloud analysis queue is full; retry shortly") from exc
+        try:
             result = await engine.analyze(payload, timeout)
+        finally:
+            semaphore.release()
         move_infos = result.get("moveInfos") or []
-        best = max(move_infos, key=lambda item: item.get("visits", 0), default=None)
+        best = min(move_infos, key=lambda item: item.get("order", 10**9), default=None)
         elapsed_ms = round((time.monotonic() - started) * 1000)
         return {
             "protocol_version": 1,
