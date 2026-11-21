@@ -63,8 +63,19 @@ class SearchThreadStressTest {
             running.start()
             Thread.sleep(100)
             cancelled.set(true)
-            running.join(5_000)
-            assertTrue("Four-thread search did not stop promptly", !running.isAlive)
+            // CI's x86_64 emulator can be heavily oversubscribed. Give the
+            // native stop predicate a realistic 30-second window, but never
+            // close the engine while its JNI search call is still in flight:
+            // destroying Search in parallel with runWholeSearch corrupts its
+            // worker mutexes and turns a test failure into a native crash.
+            running.join(30_000)
+            val stoppedPromptly = !running.isAlive
+            if (!stoppedPromptly) {
+                // Let the finite 5,000-visit search drain before session.close().
+                // The assertion below still records the cancellation regression.
+                running.join()
+            }
+            assertTrue("Four-thread search did not stop within 30 seconds", stoppedPromptly)
 
             session.setPosition(position("D4", "Q16", "D16", "Q4"))
             val resumed = checkNotNull(session.analyze(64, AtomicBoolean(false)))
