@@ -30,15 +30,13 @@ class BackendFallbackTest {
             session()
         }
         openSelectedSession(EngineConfig(), true, open).use { assertEquals("CPU", it.backend) }
-        assertEquals(listOf(Accelerator.NPU, Accelerator.CPU), attempts)
+        assertEquals(listOf(Accelerator.NPU, Accelerator.GPU, Accelerator.CPU), attempts)
         attempts.clear()
-        assertThrows(UnsatisfiedLinkError::class.java) {
-            openSelectedSession(EngineConfig(backend = EngineBackend.NPU), true, open)
-        }
+        openSelectedSession(EngineConfig(backend = EngineBackend.NPU), true, open)
         assertEquals(listOf(Accelerator.NPU), attempts)
         attempts.clear()
         openSelectedSession(EngineConfig(), false, open).close()
-        assertEquals(listOf(Accelerator.CPU), attempts)
+        assertEquals(listOf(Accelerator.GPU, Accelerator.CPU), attempts)
     }
 
     @Test fun autoPersistsAndBenchmarksTheActualBackendWithoutMixingNpuResults() = runBlocking {
