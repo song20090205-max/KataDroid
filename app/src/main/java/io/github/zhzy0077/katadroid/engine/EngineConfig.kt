@@ -65,10 +65,19 @@ enum class EngineBackend(@param:StringRes val labelRes: Int) {
     }
 }
 
-data class EngineConfig(val model: KataGoModel = KataGoModel.B6, val backend: EngineBackend = EngineBackend.AUTO, val searchThreads: Int = 1) {
+enum class ComputeMode { LOCAL, CLOUD, HYBRID }
+
+data class EngineConfig(
+    val model: KataGoModel = KataGoModel.B6,
+    val backend: EngineBackend = EngineBackend.AUTO,
+    val searchThreads: Int = 1,
+    val computeMode: ComputeMode = ComputeMode.LOCAL,
+    val cloudEndpoint: String = "",
+) {
     init { require(searchThreads in 1..4) }
     val accelerator get() = backend.accelerator()
-    // Persist results using the actual backend, never an unresolved AUTO key.
-    val cacheKey get() = "${if (model.directory == null) model.sha256 else "${model.id}-adapter1"}-${backend.name}-t$searchThreads"
-    val label get() = "${model.id} · ${backend.name}"
+    // Remote results are not persisted in the local model cache; endpoint identity
+    // still separates benchmark records and forces a fresh session when changed.
+    val cacheKey get() = "${computeMode.name}-${cloudEndpoint.hashCode()}-${if (model.directory == null) model.sha256 else "${model.id}-adapter1"}-${backend.name}-t$searchThreads"
+    val label get() = "${model.id} · ${computeMode.name} · ${backend.name}"
 }
