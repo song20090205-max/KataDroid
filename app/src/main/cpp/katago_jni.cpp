@@ -6,6 +6,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <chrono>
 #include "neuralnet/nninterface.h"
 #include "neuralnet/nneval.h"
 #include "search/search.h"
@@ -366,6 +368,77 @@ Java_io_github_zhzy0077_katadroid_engine_NativeKataGo_clearSearchAndCache(JNIEnv
   } catch (const std::exception& error) { throwJava(env, error); }
 }
 
+// The KataGo stop predicate is evaluated by native search workers as well as
+// the JNI caller. Never call Java through the caller's JNIEnv from those worker
+// threads: poll AtomicBoolean on one JVM-attached monitor thread and expose only
+// an atomic flag to the search pool.
+struct CancellationMonitor {
+  JavaVM* javaVm = vm;
+  jobject cancellation = nullptr;
+  jmethodID get = nullptr;
+  std::atomic<bool> done{false};
+  std::atomic<bool> requested{false};
+  std::thread watcher;
+
+  CancellationMonitor(JNIEnv* env, jobject object) {
+    cancellation = env->NewGlobalRef(object);
+    if (!cancellation) throw std::runtime_error("Cannot retain cancellation flag");
+    jclass type = env->GetObjectClass(object);
+    get = env->GetMethodID(type, "get", "()Z");
+    env->DeleteLocalRef(type);
+    if (!get) {
+      env->DeleteGlobalRef(cancellation);
+      cancellation = nullptr;
+      throw std::runtime_error("Missing cancellation callback");
+    }
+    try {
+      watcher = std::thread([this] {
+        JNIEnv* watcherEnv = nullptr;
+        bool attached = false;
+        jint state = javaVm->GetEnv(reinterpret_cast<void**>(&watcherEnv), JNI_VERSION_1_6);
+        if (state == JNI_EDETACHED) {
+          if (javaVm->AttachCurrentThread(&watcherEnv, nullptr) != JNI_OK) {
+            requested.store(true, std::memory_order_release);
+            return;
+          }
+          attached = true;
+        } else if (state != JNI_OK) {
+          requested.store(true, std::memory_order_release);
+          return;
+        }
+        while (!done.load(std::memory_order_acquire)) {
+          const jboolean value = watcherEnv->CallBooleanMethod(cancellation, get);
+          if (watcherEnv->ExceptionCheck()) {
+            watcherEnv->ExceptionClear();
+            requested.store(true, std::memory_order_release);
+            break;
+          }
+          if (value == JNI_TRUE) {
+            requested.store(true, std::memory_order_release);
+            break;
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+        if (attached) javaVm->DetachCurrentThread();
+      });
+    } catch (...) {
+      env->DeleteGlobalRef(cancellation);
+      cancellation = nullptr;
+      throw;
+    }
+  }
+
+  ~CancellationMonitor() {
+    done.store(true, std::memory_order_release);
+    if (watcher.joinable()) watcher.join();
+    JNIEnv* env = nullptr;
+    if (javaVm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_OK && cancellation)
+      env->DeleteGlobalRef(cancellation);
+  }
+
+  bool isCancelled() const { return requested.load(std::memory_order_acquire); }
+};
+
 static jstring analyzeSearch(JNIEnv* env, jlong handle, jint visits, jint milliseconds, jobject cancelled) {
   try {
     auto& e = engine(handle);
@@ -373,11 +446,9 @@ static jstring analyzeSearch(JNIEnv* env, jlong handle, jint visits, jint millis
     // Settings and automatic play bound each budget; interactive analysis can
     // keep increasing its cumulative visit target beyond that initial budget.
     if (visits < 1) throw std::runtime_error("Invalid search limit");
-    jclass type = env->GetObjectClass(cancelled);
-    jmethodID get = env->GetMethodID(type, "get", "()Z");
-    env->DeleteLocalRef(type);
+    CancellationMonitor cancellationMonitor(env, cancelled);
     std::function<bool()> stop = [&] {
-      return e.bridge.failed.load(std::memory_order_acquire) || env->CallBooleanMethod(cancelled, get) == JNI_TRUE;
+      return e.bridge.failed.load(std::memory_order_acquire) || cancellationMonitor.isCancelled();
     };
     if (stop()) return nullptr;
     const auto& history = e.search->getRootHist();
