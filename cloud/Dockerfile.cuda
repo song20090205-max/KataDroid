@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 COPY --from=build /src/KataGo/cpp/katago /usr/local/bin/katago
 COPY --from=build /src/KataGo/cpp/configs/analysis_example.cfg /opt/katago/analysis_example.cfg
+RUN sed -i 's/^numAnalysisThreads = .*/numAnalysisThreads = 1/; s/^numSearchThreadsPerAnalysisThread = .*/numSearchThreadsPerAnalysisThread = 16/; s/^nnMaxBatchSize = .*/nnMaxBatchSize = 64/; s/^nnCacheSizePowerOfTwo = .*/nnCacheSizePowerOfTwo = 22/' /opt/katago/analysis_example.cfg
 COPY requirements.txt /app/requirements.txt
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 COPY katago_cloud /app/katago_cloud
