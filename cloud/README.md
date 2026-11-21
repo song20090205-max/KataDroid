@@ -29,6 +29,18 @@ docker compose --env-file .env logs -f
 
 The service listens only on `127.0.0.1:8080`. This is intentional. For access from the phone over the internet, place an HTTPS reverse proxy in front, configure TLS and rate limits, and expose only that proxy. Never expose port 8080 directly or commit the token.
 
+## Public HTTPS endpoint
+
+The default Compose file binds port 8080 to loopback only. To expose the API safely to the phone:
+
+1. Set `CADDY_DOMAIN` in `.env` to a DNS name whose A/AAAA records point to this host.
+2. Allow inbound TCP 80/443 (and optionally UDP 443) on the host firewall.
+3. Start the CPU service with `docker compose --env-file .env -f docker-compose.yml -f docker-compose.public.yml up --build -d`, or the CUDA service with `docker compose --env-file .env -f docker-compose.cuda.yml -f docker-compose.public.yml up --build -d`.
+4. Caddy obtains and renews the HTTPS certificate automatically. The proxy exposes only `/v1/*`; the FastAPI docs and other paths remain closed.
+5. Enter `https://<your-domain>` and the same API token in KataGo Master.
+
+A public DNS name and a host reachable from the internet are required for this direct HTTPS setup. If you do not have either, the server can still run privately, but the phone cannot reach it over the public internet yet. Do not disable TLS or place the API token in a URL.
+
 ## API
 
 - `GET /v1/healthz`: non-sensitive liveness probe.
