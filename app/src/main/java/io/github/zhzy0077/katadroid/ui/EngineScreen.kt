@@ -38,7 +38,7 @@ fun EngineScreen(
     config: EngineConfig,
     benchmark: BenchmarkUiState,
     onConfig: (EngineConfig) -> Unit,
-    onCloudConfig: (ComputeMode, String, String?) -> Unit,
+    onCloudConfig: (ComputeMode, String, String?) -> Boolean,
     onClearCloudToken: () -> Unit,
     onStart: (Int) -> Unit,
     onCancel: () -> Unit,
@@ -147,15 +147,16 @@ fun EngineScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = {
-                            onCloudConfig(computeMode, cloudEndpoint.trim(), cloudToken.takeIf { it.isNotBlank() })
-                            if (cloudToken.isNotBlank()) {
+                            val saved = onCloudConfig(computeMode, cloudEndpoint.trim(), cloudToken.takeIf { it.isNotBlank() })
+                            if (saved && cloudToken.isNotBlank()) {
                                 cloudTokenConfigured = true
                                 cloudToken = ""
                             }
                         },
-                        enabled = computeMode == ComputeMode.LOCAL ||
+                        enabled = (computeMode == ComputeMode.LOCAL ||
                             (cloudEndpoint.startsWith("https://", ignoreCase = true) &&
-                                (cloudToken.length >= 16 || cloudTokenConfigured)),
+                                (cloudToken.length >= 16 || cloudTokenConfigured))) &&
+                            (cloudToken.isBlank() || cloudToken.length >= 16),
                         modifier = Modifier.weight(1f).testTag("save-cloud-settings")
                     ) { Text(resources.getString(R.string.cloud_save)) }
                     if (cloudTokenConfigured) {
@@ -243,7 +244,9 @@ internal fun EngineConfig.displayLabel(resources: Resources): String {
         ComputeMode.CLOUD -> resources.getString(R.string.compute_cloud)
         ComputeMode.HYBRID -> resources.getString(R.string.compute_hybrid)
     }
-    return "${if (model.directory == null) model.id else model.sourceName} · $source"
+    val modelLabel = if (computeMode == ComputeMode.CLOUD) resources.getString(R.string.cloud_server_model)
+        else if (model.directory == null) model.id else model.sourceName
+    return "$modelLabel · $source"
 }
 
 internal fun benchmarkCaseLabel(resources: Resources, label: String) = resources.getString(when (label) {
