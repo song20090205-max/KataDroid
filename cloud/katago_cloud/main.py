@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 log = logging.getLogger("katago-cloud")
@@ -43,9 +43,19 @@ class AnalyzeRequest(BaseModel):
     moves: list[tuple[Literal["B", "W"], str]] = Field(default_factory=list, max_length=2000)
     initial_stones: list[tuple[Literal["B", "W"], str]] = Field(default_factory=list, max_length=625)
     max_visits: int | None = Field(default=None, ge=1)
-    max_time_seconds: float | None = Field(default=None, gt=0, le=HARD_MAX_TIME)
     include_ownership: bool = False
     include_policy: bool = False
+
+    @model_validator(mode="after")
+    def validate_history(self):
+        for index in range(1, len(self.moves)):
+            if self.moves[index][0] == self.moves[index - 1][0]:
+                raise ValueError("Move colors must alternate in the supplied history")
+        if self.moves:
+            expected = "W" if self.moves[-1][0] == "B" else "B"
+            if self.to_move != expected:
+                raise ValueError("to_move does not match the supplied move history")
+        return self
 
     @field_validator("moves")
     @classmethod
@@ -226,9 +236,6 @@ async def analyze(request: AnalyzeRequest) -> dict:
     max_visits = request.max_visits or DEFAULT_MAX_VISITS
     if max_visits > HARD_MAX_VISITS:
         raise HTTPException(status_code=422, detail=f"max_visits exceeds server limit ({HARD_MAX_VISITS})")
-    if request.max_time_seconds is not None and request.max_visits is not None:
-        raise HTTPException(status_code=422, detail="Specify max_visits or max_time_seconds, not both")
-
     if request.moves:
         expected_to_move = "W" if request.moves[-1][0] == "B" else "B"
         if request.to_move != expected_to_move:
@@ -247,14 +254,9 @@ async def analyze(request: AnalyzeRequest) -> dict:
         "includeOwnership": request.include_ownership,
         "includePolicy": request.include_policy,
     }
-    if request.max_time_seconds is None:
-        payload["maxVisits"] = max_visits
-        timeout = min(180.0, max(30.0, max_visits / 500.0 + 20.0))
-        budget = {"max_visits": max_visits}
-    else:
-        payload["maxTime"] = request.max_time_seconds
-        timeout = request.max_time_seconds + 20.0
-        budget = {"max_time_seconds": request.max_time_seconds}
+    payload["maxVisits"] = max_visits
+    timeout = min(600.0, max(60.0, max_visits / 100.0 + 30.0))
+    budget = {"max_visits": max_visits}
 
     started = time.monotonic()
     try:
