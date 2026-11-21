@@ -71,10 +71,14 @@ object NpuProbe {
         return directory
     }
 
-    fun options(context: Context, accelerator: Accelerator): CompiledModel.Options =
+    fun options(
+        context: Context,
+        accelerator: Accelerator,
+        gpuPrecision: CompiledModel.GpuOptions.Precision = CompiledModel.GpuOptions.Precision.FP32,
+    ): CompiledModel.Options =
         CompiledModel.Options(accelerator).apply {
             if (accelerator == Accelerator.GPU)
-                gpuOptions = CompiledModel.GpuOptions(precision = CompiledModel.GpuOptions.Precision.FP32)
+                gpuOptions = CompiledModel.GpuOptions(precision = gpuPrecision)
             if (accelerator == Accelerator.NPU && vendor(context) == Vendor.QUALCOMM)
                 qualcommOptions = CompiledModel.QualcommOptions(logLevel = CompiledModel.QualcommOptions.LogLevel.WARN)
         }
