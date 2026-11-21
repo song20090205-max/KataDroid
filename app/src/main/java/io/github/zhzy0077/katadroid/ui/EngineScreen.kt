@@ -23,6 +23,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import io.github.zhzy0077.katadroid.NpuProbe
 import io.github.zhzy0077.katadroid.engine.*
 import io.github.zhzy0077.katadroid.ui.theme.GoColors
@@ -35,6 +38,8 @@ fun EngineScreen(
     config: EngineConfig,
     benchmark: BenchmarkUiState,
     onConfig: (EngineConfig) -> Unit,
+    onCloudConfig: (ComputeMode, String, String?) -> Unit,
+    onClearCloudToken: () -> Unit,
     onStart: (Int) -> Unit,
     onCancel: () -> Unit,
     onDiagnostics: () -> Unit,
@@ -43,6 +48,10 @@ fun EngineScreen(
     val resources = LocalResources.current
     val context = LocalContext.current
     var visits by rememberSaveable { mutableIntStateOf(500) }
+    var computeMode by rememberSaveable(config.computeMode) { mutableStateOf(config.computeMode) }
+    var cloudEndpoint by rememberSaveable(config.cloudEndpoint) { mutableStateOf(config.cloudEndpoint) }
+    var cloudToken by remember { mutableStateOf("") }
+    var cloudTokenConfigured by remember { mutableStateOf(CloudTokenStore.isConfigured(context)) }
     var catalogRevision by remember { mutableIntStateOf(0) }
     var importing by remember { mutableStateOf(false) }
     var importStatus by remember { mutableStateOf<String?>(null) }
@@ -100,6 +109,68 @@ fun EngineScreen(
                 Hint(resources.getString(R.string.model_weights, config.model.sourceName))
             }
             SettingsCard {
+                SectionTitle(resources.getString(R.string.compute_mode))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ComputeMode.entries.forEach { mode ->
+                        FilterChip(
+                            selected = computeMode == mode,
+                            onClick = { computeMode = mode },
+                            label = { Text(resources.getString(when (mode) {
+                                ComputeMode.LOCAL -> R.string.compute_local
+                                ComputeMode.CLOUD -> R.string.compute_cloud
+                                ComputeMode.HYBRID -> R.string.compute_hybrid
+                            })) },
+                            modifier = Modifier.testTag("compute-mode-${mode.name.lowercase()}")
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = cloudEndpoint,
+                    onValueChange = { cloudEndpoint = it },
+                    singleLine = true,
+                    label = { Text(resources.getString(R.string.cloud_endpoint)) },
+                    placeholder = { Text("https://your-server.example") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                    modifier = Modifier.fillMaxWidth().testTag("cloud-endpoint")
+                )
+                OutlinedTextField(
+                    value = cloudToken,
+                    onValueChange = { cloudToken = it },
+                    singleLine = true,
+                    label = { Text(resources.getString(R.string.cloud_token)) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth().testTag("cloud-token")
+                )
+                Hint(resources.getString(if (cloudTokenConfigured) R.string.cloud_token_saved else R.string.cloud_token_missing))
+                Hint(resources.getString(R.string.cloud_model_note))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            onCloudConfig(computeMode, cloudEndpoint.trim(), cloudToken.takeIf { it.isNotBlank() })
+                            if (cloudToken.isNotBlank()) {
+                                cloudTokenConfigured = true
+                                cloudToken = ""
+                            }
+                        },
+                        enabled = computeMode == ComputeMode.LOCAL ||
+                            (cloudEndpoint.startsWith("https://", ignoreCase = true) &&
+                                (cloudToken.length >= 16 || cloudTokenConfigured)),
+                        modifier = Modifier.weight(1f).testTag("save-cloud-settings")
+                    ) { Text(resources.getString(R.string.cloud_save)) }
+                    if (cloudTokenConfigured) {
+                        OutlinedButton(onClick = {
+                            onClearCloudToken()
+                            cloudTokenConfigured = false
+                            cloudToken = ""
+                        }, modifier = Modifier.testTag("clear-cloud-token")) {
+                            Text(resources.getString(R.string.cloud_clear_token))
+                        }
+                    }
+                }
+                Hint(resources.getString(R.string.cloud_https_hint))
+            }
+            SettingsCard {
                 SectionTitle(resources.getString(R.string.compute_device))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     EngineBackend.entries.forEach { backend ->
@@ -110,6 +181,7 @@ fun EngineScreen(
                     }
                 }
                 Hint(resources.getString(R.string.backend_hint))
+                Hint(resources.getString(R.string.backend_local_fallback_hint))
             }
             SettingsCard {
                 SectionTitle(resources.getString(R.string.search_benchmark))
@@ -165,7 +237,14 @@ fun EngineScreen(
 
 private fun decimal(value: Double, digits: Int = 1) = String.format(Locale.ROOT, "%.${digits}f", value)
 
-internal fun EngineConfig.displayLabel(resources: Resources) = "${if (model.directory == null) model.id else model.sourceName} · ${resources.getString(backend.labelRes)}"
+internal fun EngineConfig.displayLabel(resources: Resources): String {
+    val source = when (computeMode) {
+        ComputeMode.LOCAL -> resources.getString(backend.labelRes)
+        ComputeMode.CLOUD -> resources.getString(R.string.compute_cloud)
+        ComputeMode.HYBRID -> resources.getString(R.string.compute_hybrid)
+    }
+    return "${if (model.directory == null) model.id else model.sourceName} · $source"
+}
 
 internal fun benchmarkCaseLabel(resources: Resources, label: String) = resources.getString(when (label) {
     "empty" -> R.string.case_empty
