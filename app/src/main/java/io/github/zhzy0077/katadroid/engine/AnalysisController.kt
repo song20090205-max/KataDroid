@@ -339,7 +339,12 @@ class KataGoViewModel(application: Application) : AndroidViewModel(application) 
     val controller = AnalysisController(
         factory = { config ->
             openSelectedSession(config, NpuProbe.hasRuntimeLibraries(application)) { accelerator ->
-                KataGoSession.open(application, accelerator, config.model, config.searchThreads)
+                KataGoSession.open(
+                    application, accelerator, config.model, config.searchThreads,
+                    gpuPrecision = if (accelerator == Accelerator.GPU)
+                        com.google.ai.edge.litert.CompiledModel.GpuOptions.Precision.FP16
+                    else com.google.ai.edge.litert.CompiledModel.GpuOptions.Precision.FP32,
+                )
             }
         },
         store = FileAnalysisStore(File(application.filesDir, "analysis-cache.json")),
