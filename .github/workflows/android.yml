@@ -31,7 +31,18 @@ jobs:
           python3 -m pip install -r tools/portable-model-requirements.txt
           python3 -m unittest discover -s tools/tests
       - name: Build and check CPU-capable APK
-        run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
+        run: |
+          for attempt in 1 2 3; do
+            echo "Gradle build attempt $attempt/3"
+            if ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest --console=plain; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Build failed; retrying in 20 seconds to tolerate transient repository resolution failures."
+              sleep 20
+            fi
+          done
+          exit 1
       - name: Upload KataGo Master APK
         if: success()
         uses: actions/upload-artifact@v4
