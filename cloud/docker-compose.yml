@@ -9,15 +9,13 @@ services:
     init: true
     environment:
       KATAGO_BIN: /usr/local/bin/katago
-      KATAGO_CONFIG: /data/analysis.cfg
+      KATAGO_CONFIG: /opt/katago/analysis_example.cfg
       KATAGO_MODEL: /models/model.bin.gz
       KATAGO_API_TOKEN: ${KATAGO_API_TOKEN:?Set KATAGO_API_TOKEN in your environment}
       KATAGO_MAX_CONCURRENT: "1"
       KATAGO_DEFAULT_MAX_VISITS: "1200"
       KATAGO_HARD_MAX_VISITS: "100000"
-      KATAGO_HARD_MAX_TIME_SECONDS: "120"
     volumes:
-      - ./data:/data:ro
       - ./models:/models:ro
     ports:
       # Keep the service private. Put an HTTPS reverse proxy in front before remote access.
