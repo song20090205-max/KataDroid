@@ -18,7 +18,7 @@ Docker Engine with Compose plugin. For the first smoke test, use a host with eno
 ## Prepare files
 
 1. Copy `.env.example` to `.env` and set a long random `KATAGO_API_TOKEN`. Keep `.env` private.
-2. Run `./download_model.sh` to fetch the official large b11c768 neural-network model into `models/model.bin.gz` (about 212 MB). The model is separate from the Android `.kdmodel` file; the two formats are not interchangeable.
+2. Run `bash download_model.sh` to fetch the official large b11c768 neural-network model into `models/model.bin.gz` (about 212 MB). The model is separate from the Android `.kdmodel` file; the two formats are not interchangeable.
 3. The image includes KataGo's official `analysis_example.cfg` as a working baseline. For performance tuning, copy it out, adjust `numSearchThreadsPerAnalysisThread`, `nnMaxBatchSize`, and `nnCacheSizePowerOfTwo` for the actual host, then mount your tuned config read-only. Do not blindly copy GPU settings into a CPU host.
 4. Build and start:
 
@@ -54,7 +54,7 @@ curl -sS http://127.0.0.1:8080/v1/analyze \
   }'
 ```
 
-The response includes `source: cloud`, the matching request ID, model checksum, actual completed visits, elapsed time, best move and KataGo analysis details. The client must still validate the returned move against its current board before applying it.
+The service config reports win rates and score lead from Black's perspective. The response includes `source: cloud`, the matching request ID, model checksum, actual completed visits, elapsed time, best move and KataGo analysis details. The client must still validate the returned move against its current board before applying it.
 
 ## Important limits
 
