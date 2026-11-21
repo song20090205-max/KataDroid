@@ -22,7 +22,7 @@ RUN sed -i 's/^numAnalysisThreads = .*/numAnalysisThreads = 1/; s/^numSearchThre
 COPY requirements.txt /app/requirements.txt
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 COPY katago_cloud /app/katago_cloud
-ENV PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
     KATAGO_BIN=/usr/local/bin/katago \
     KATAGO_CONFIG=/opt/katago/analysis_example.cfg \
     KATAGO_MODEL=/models/model.bin.gz \
