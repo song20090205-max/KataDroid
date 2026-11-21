@@ -13,7 +13,7 @@ RUN cmake . -DUSE_BACKEND=EIGEN -DCMAKE_BUILD_TYPE=Release -DNO_GIT_REVISION=1 \
 FROM ubuntu:24.04
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libstdc++6 zlib1g libzip4 libgomp1 python3 python3-pip ca-certificates \
+    libstdc++6 zlib1g libzip4t64 libgomp1 python3 python3-pip ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /src/KataGo/cpp/katago /usr/local/bin/katago
