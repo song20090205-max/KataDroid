@@ -130,6 +130,11 @@ class CloudAnalysisSession(
                 "This record contains a non-alternating PL edit; use Hybrid or Local mode"
             }
         }
+        if (current.moveColors.isNotEmpty()) {
+            require(current.moveColors.first() == current.initialPlayer) {
+                "This record changes the initial player; use Hybrid or Local mode"
+            }
+        }
         val expectedNext = current.moveColors.lastOrNull()?.let { 3 - it } ?: current.initialPlayer
         require(current.nextPlayer == expectedNext) {
             "This record changes the player to move without a played move; use Hybrid or Local mode"
@@ -220,7 +225,7 @@ class CloudAnalysisSession(
             try {
                 connection.requestMethod = "POST"
                 connection.connectTimeout = 15_000
-                connection.readTimeout = 600_000
+                connection.readTimeout = 660_000
                 connection.useCaches = false
                 connection.doOutput = true
                 connection.setRequestProperty("Authorization", "Bearer $token")
