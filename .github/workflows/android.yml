@@ -71,7 +71,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -cores 2 -memory 4096
           disable-animations: true
           script: |
-            set -euo pipefail
+            set -eu
             mkdir -p test-diagnostics
             adb shell getprop sys.boot_completed > test-diagnostics/emulator-health.txt
             adb shell cmd package list packages > test-diagnostics/package-service-health.txt
