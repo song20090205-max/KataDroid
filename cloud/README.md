@@ -1,12 +1,12 @@
 # KataGo Cloud Engine
 
-A self-hostable, authenticated HTTP service that runs the real KataGo analysis engine. The first implementation is deliberately conservative: one persistent KataGo worker, serialized analysis requests, bounded search budgets, and a private-by-default network binding.
+A self-hostable, authenticated HTTP service that runs the real KataGo analysis engine. The first implementation is deliberately conservative: one persistent KataGo worker, serialized analysis requests, bounded visit budgets, and a private-by-default network binding.
 
 ## Current scope
 
 - Real KataGo analysis-mode subprocess; not a mock engine and not phone-side computation.
 - Complete board state: board dimensions, rules, komi, initial setup stones, side to move and move history.
-- Versioned JSON API, request IDs, model SHA-256, visit/time budgets and analysis output.
+- Versioned JSON API, request IDs, model SHA-256, visit budgets and analysis output.
 - Bearer-token authentication, bounded payloads/searches, request serialization and worker restart after timeout.
 - CPU Eigen build as the portable baseline. A CUDA worker image and multi-worker scheduling are separate qualification steps; do not label this CPU image as GPU.
 - No public endpoint is exposed by the default Compose file.
@@ -18,8 +18,8 @@ Docker Engine with Compose plugin. For the first smoke test, use a host with eno
 ## Prepare files
 
 1. Copy `.env.example` to `.env` and set a long random `KATAGO_API_TOKEN`. Keep `.env` private.
-2. Put a KataGo-compatible neural-network model at `models/model.bin.gz`.
-3. Put a matching analysis configuration at `data/analysis.cfg`. Start from the official KataGo analysis/GTP example configuration and tune `numSearchThreads`, `nnMaxBatchSize`, and `nnCacheSizePowerOfTwo` for the actual host RAM/CPU. Do not blindly copy GPU settings into a CPU host.
+2. Run `./download_model.sh` to fetch the official large b11c768 neural-network model into `models/model.bin.gz` (about 212 MB). The model is separate from the Android `.kdmodel` file; the two formats are not interchangeable.
+3. The image includes KataGo's official `analysis_example.cfg` as a working baseline. For performance tuning, copy it out, adjust `numSearchThreadsPerAnalysisThread`, `nnMaxBatchSize`, and `nnCacheSizePowerOfTwo` for the actual host, then mount your tuned config read-only. Do not blindly copy GPU settings into a CPU host.
 4. Build and start:
 
 ```sh
@@ -60,7 +60,7 @@ The response includes `source: cloud`, the matching request ID, model checksum, 
 
 - This initial service is a working CPU-first foundation, not yet a deployed public cloud and not yet connected to the Android app.
 - The Compose service uses one worker to avoid concurrent writes to a single analysis process. Scaling requires a worker pool with one process per worker and bounded queueing.
-- GPU acceleration requires a separately compiled KataGo CUDA backend, a compatible NVIDIA host/driver and runtime qualification. It is not enabled by the CPU Dockerfile.
+- GPU acceleration is available as a separate `Dockerfile.cuda` build. It requires a compatible NVIDIA GPU, host driver, NVIDIA Container Toolkit and runtime qualification. It is not enabled by the CPU Dockerfile. Start it with `docker compose --env-file .env -f docker-compose.cuda.yml up --build -d`.
 - Free compute hosts can suspend or enforce quotas. No always-on GPU capacity is promised.
 - Use a reverse proxy with HTTPS before remote use. The API token is a secret and must never be embedded as a shared constant in the APK.
 - Compare strength using identical model, rules, komi and search budgets; visits/second alone are not a strength measurement.
