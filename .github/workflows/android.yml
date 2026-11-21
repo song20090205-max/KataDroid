@@ -19,7 +19,7 @@ jobs:
           java-version: '25'
       - uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: '16111833' # Command-line Tools 23.0
+          cmdline-tools-version: '16111833'
           packages: 'platform-tools'
           log-accepted-android-sdk-licenses: false
       - uses: gradle/actions/setup-gradle@v4
@@ -33,7 +33,6 @@ jobs:
       - name: Build and check CPU-capable APK
         run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
 
-      # Save the APK before emulator tests so it survives a regression-test failure.
       - name: Upload KataGo Master APK
         if: success()
         uses: actions/upload-artifact@v4
@@ -43,7 +42,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Run search-thread, model-speed and transformer CPU tests
+      - name: Run instrumented tests and capture diagnostics
         timeout-minutes: 45
         uses: reactivecircus/android-emulator-runner@v2
         env:
@@ -57,13 +56,52 @@ jobs:
           emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest --console=plain
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.ModelBenchmarkTest --console=plain
+            set +e
+            mkdir -p test-diagnostics
+            failures=0
+            run_test() {
+              label="$1"
+              shift
+              echo "===== START $label ====="
+              "$@" > "test-diagnostics/$label.log" 2>&1
+              rc=$?
+              cat "test-diagnostics/$label.log"
+              echo "$rc" > "test-diagnostics/$label.exitcode"
+              adb logcat -d -v threadtime > "test-diagnostics/$label-logcat.txt" 2>&1
+              if [ -d app/build/reports/androidTests/connected/debug ]; then
+                mkdir -p "test-diagnostics/$label-report"
+                cp -R app/build/reports/androidTests/connected/debug/. "test-diagnostics/$label-report/"
+              fi
+              if [ "$rc" -ne 0 ]; then failures=$((failures + 1)); fi
+              echo "===== END $label (exit $rc) ====="
+            }
+            run_test search-threads ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest --console=plain --info
+            run_test model-benchmark ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.ModelBenchmarkTest --console=plain --info
 
             MODEL=tf2-b10c384-s2941M-d5872M.kdmodel
             URL=https://github.com/zhzy0077/KataDroid/releases/download/v1.1.0-rc.1/$MODEL
             curl --fail --location --retry 3 --retry-delay 3 --max-time 600 "$URL" -o "/tmp/$MODEL"
-            echo "4e88cc28ee362dca5b5ba8c494017932e5c0b2c433b0cde15bbaddde73b1cb80  /tmp/$MODEL" | sha256sum --check -
-            adb shell mkdir -p /sdcard/Android/data/io.github.zhzy0077.katadroid/files
-            adb push "/tmp/$MODEL" /sdcard/Android/data/io.github.zhzy0077.katadroid/files/
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.OptionalModelIntegrationTest -Pandroid.testInstrumentationRunnerArguments.modelPackage="$MODEL" --console=plain
+            download_rc=$?
+            if [ "$download_rc" -eq 0 ]; then
+              echo "4e88cc28ee362dca5b5ba8c494017932e5c0b2c433b0cde15bbaddde73b1cb80  /tmp/$MODEL" | sha256sum --check -
+              hash_rc=$?
+              if [ "$hash_rc" -eq 0 ]; then
+                adb shell mkdir -p /sdcard/Android/data/io.github.zhzy0077.katadroid/files
+                adb push "/tmp/$MODEL" /sdcard/Android/data/io.github.zhzy0077.katadroid/files/
+                push_rc=$?
+                if [ "$push_rc" -eq 0 ]; then
+                  run_test transformer-cpu ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.OptionalModelIntegrationTest -Pandroid.testInstrumentationRunnerArguments.modelPackage="$MODEL" --console=plain --info
+                else failures=$((failures + 1)); echo "adb push failed: $push_rc" >> test-diagnostics/transformer-setup.log; fi
+              else failures=$((failures + 1)); echo "Model SHA256 mismatch" >> test-diagnostics/transformer-setup.log; fi
+            else failures=$((failures + 1)); echo "Model download failed: $download_rc" >> test-diagnostics/transformer-setup.log; fi
+            echo "TEST_FAILURE_COUNT=$failures"
+            exit "$failures"
+
+      - name: Upload emulator test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: KataGo-emulator-test-diagnostics
+          path: test-diagnostics/
+          if-no-files-found: warn
+          retention-days: 14
