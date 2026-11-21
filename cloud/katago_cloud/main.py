@@ -37,7 +37,7 @@ class AnalyzeRequest(BaseModel):
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4()), min_length=1, max_length=80)
     board_x_size: int = Field(default=19, ge=2, le=25)
     board_y_size: int = Field(default=19, ge=2, le=25)
-    rules: Literal["chinese", "japanese", "korean", "aga", "tromp-taylor", "new-zealand", "stone-scoring", " 围棋"] = "chinese"
+    rules: Literal["chinese", "japanese", "korean", "aga", "tromp-taylor", "new-zealand", "stone-scoring"] = "chinese"
     komi: float = Field(default=7.5, ge=-100.0, le=100.0)
     to_move: Literal["B", "W"] = "B"
     moves: list[tuple[Literal["B", "W"], str]] = Field(default_factory=list, max_length=2000)
@@ -229,6 +229,11 @@ async def analyze(request: AnalyzeRequest) -> dict:
     if request.max_time_seconds is not None and request.max_visits is not None:
         raise HTTPException(status_code=422, detail="Specify max_visits or max_time_seconds, not both")
 
+    if request.moves:
+        expected_to_move = "W" if request.moves[-1][0] == "B" else "B"
+        if request.to_move != expected_to_move:
+            raise HTTPException(status_code=422, detail=f"to_move must be {expected_to_move} after supplied move history")
+
     request_id = request.request_id
     payload = {
         "id": request_id,
@@ -238,7 +243,7 @@ async def analyze(request: AnalyzeRequest) -> dict:
         "komi": request.komi,
         "initialStones": [list(stone) for stone in request.initial_stones],
         "moves": [list(move) for move in request.moves],
-        "initialPlayer": request.to_move if not request.moves else None,
+        "initialPlayer": request.moves[0][0] if request.moves else request.to_move,
         "includeOwnership": request.include_ownership,
         "includePolicy": request.include_policy,
     }
