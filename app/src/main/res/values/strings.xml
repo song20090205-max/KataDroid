@@ -284,4 +284,20 @@
     <string name="black_to_play">Black to play</string>
     <string name="white_to_play">White to play</string>
     <string name="board_capture_record_name">Screen-recognized Go position</string>
+
+    <string name="compute_mode">Compute mode</string>
+    <string name="compute_local">Local device</string>
+    <string name="compute_cloud">Cloud</string>
+    <string name="compute_hybrid">Hybrid</string>
+    <string name="cloud_endpoint">Cloud server URL</string>
+    <string name="cloud_token">Cloud API token</string>
+    <string name="cloud_token_saved">Token encrypted with Android Keystore and saved.</string>
+    <string name="cloud_token_missing">Cloud API token is not configured.</string>
+    <string name="cloud_model_note">Cloud mode uses the model configured on the server. The phone model is used only for Local mode and Hybrid fallback.</string>
+    <string name="cloud_save">Save cloud settings</string>
+    <string name="cloud_clear_token">Clear token</string>
+    <string name="cloud_https_hint">Remote connections require HTTPS. Enter the server base URL without /v1/analyze.</string>
+    <string name="cloud_save_failed">Could not save cloud settings.</string>
+    <string name="backend_local_fallback_hint">The device selection applies only to Local mode and Hybrid's on-device fallback.</string>
+
 </resources>
