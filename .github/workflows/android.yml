@@ -69,7 +69,7 @@ jobs:
             adb shell run-as io.github.zhzy0077.katadroid cp /data/local/tmp/tf2-b10c384-s2941M-d5872M.kdmodel files/
             adb shell run-as io.github.zhzy0077.katadroid ls -l files/tf2-b10c384-s2941M-d5872M.kdmodel
             adb logcat -c
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest,io.github.zhzy0077.katadroid.ModelBenchmarkTest,io.github.zhzy0077.katadroid.OptionalModelIntegrationTest -Pandroid.testInstrumentationRunnerArguments.modelPackage=tf2-b10c384-s2941M-d5872M.kdmodel --console=plain --info > test-diagnostics/instrumented-tests.log 2>&1
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest,io.github.zhzy0077.katadroid.ModelBenchmarkTest,io.github.zhzy0077.katadroid.GpuPrecisionBenchmarkTest,io.github.zhzy0077.katadroid.OptionalModelIntegrationTest -Pandroid.testInstrumentationRunnerArguments.modelPackage=tf2-b10c384-s2941M-d5872M.kdmodel --console=plain --info > test-diagnostics/instrumented-tests.log 2>&1
             echo "instrumentation_exit=$?" > test-diagnostics/instrumented-tests.exitcode
             adb logcat -d -v threadtime > test-diagnostics/emulator-logcat.txt 2>&1
             cat test-diagnostics/instrumented-tests.log
