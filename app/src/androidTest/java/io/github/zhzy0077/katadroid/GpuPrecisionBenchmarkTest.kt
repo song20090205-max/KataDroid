@@ -59,6 +59,9 @@ class GpuPrecisionBenchmarkTest {
                 } catch (error: Exception) {
                     report("GPU_PRECISION_REJECTED model=${model.id} precision=${precision.name} " +
                         "reason=${error.javaClass.simpleName}: ${error.message}")
+                } catch (error: LinkageError) {
+                    report("GPU_PRECISION_UNAVAILABLE model=${model.id} precision=${precision.name} " +
+                        "reason=${error.javaClass.simpleName}: ${error.message}")
                 }
             }
         }
