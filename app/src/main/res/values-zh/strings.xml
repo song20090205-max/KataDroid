@@ -300,4 +300,5 @@
     <string name="cloud_save_failed">无法保存云端设置。</string>
     <string name="backend_local_fallback_hint">设备选择只影响手机本机运算及混合模式的本机备援。</string>
 
+    <string name="cloud_server_model">云端服务器模型</string>
 </resources>
