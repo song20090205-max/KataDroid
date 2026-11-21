@@ -60,19 +60,32 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -cores 2 -memory 4096
           disable-animations: true
           script: |
+            set -euo pipefail
             mkdir -p test-diagnostics
             adb shell getprop sys.boot_completed > test-diagnostics/emulator-health.txt
             adb shell cmd package list packages > test-diagnostics/package-service-health.txt
-            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            # Remove snapshot leftovers so a stale debug signature cannot block installation.
+            adb uninstall io.github.zhzy0077.katadroid >/dev/null 2>&1 || true
+            adb uninstall io.github.zhzy0077.katadroid.test >/dev/null 2>&1 || true
+            adb install app/build/outputs/apk/debug/app-debug.apk
             adb push "$MODEL_PATH" /data/local/tmp/tf2-b10c384-s2941M-d5872M.kdmodel
             adb shell run-as io.github.zhzy0077.katadroid mkdir -p files
             adb shell run-as io.github.zhzy0077.katadroid cp /data/local/tmp/tf2-b10c384-s2941M-d5872M.kdmodel files/
             adb shell run-as io.github.zhzy0077.katadroid ls -l files/tf2-b10c384-s2941M-d5872M.kdmodel
+            adb install -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             adb logcat -c
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest,io.github.zhzy0077.katadroid.ModelBenchmarkTest,io.github.zhzy0077.katadroid.GpuPrecisionBenchmarkTest,io.github.zhzy0077.katadroid.OptionalModelIntegrationTest -Pandroid.testInstrumentationRunnerArguments.modelPackage=tf2-b10c384-s2941M-d5872M.kdmodel --console=plain --info > test-diagnostics/instrumented-tests.log 2>&1
-            echo "instrumentation_exit=$?" > test-diagnostics/instrumented-tests.exitcode
+            set +e
+            adb shell am instrument -w -r \
+              -e class io.github.zhzy0077.katadroid.SearchThreadStressTest,io.github.zhzy0077.katadroid.ModelBenchmarkTest,io.github.zhzy0077.katadroid.GpuPrecisionBenchmarkTest,io.github.zhzy0077.katadroid.OptionalModelIntegrationTest \
+              -e modelPackage tf2-b10c384-s2941M-d5872M.kdmodel \
+              io.github.zhzy0077.katadroid.test/androidx.test.runner.AndroidJUnitRunner \
+              > test-diagnostics/instrumented-tests.log 2>&1
+            test_exit=$?
+            set -e
+            echo "instrumentation_exit=$test_exit" > test-diagnostics/instrumented-tests.exitcode
             adb logcat -d -v threadtime > test-diagnostics/emulator-logcat.txt 2>&1
             cat test-diagnostics/instrumented-tests.log
+            exit "$test_exit"
       - name: Upload emulator test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
