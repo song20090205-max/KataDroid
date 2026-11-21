@@ -196,7 +196,8 @@ class AnalysisController(
                                     historyCompleted = state.historyCompleted + 1) }) saveCache(command, actualConfig)
                         }
                         publish(command) { it.copy(historyAnalyzing = false) }
-                        if (request.continuous && !command.cancelled.get() && state.value.completedAnalysis?.gameFinished != true) {
+                        if (request.continuous && request.config.computeMode == ComputeMode.LOCAL &&
+                            !command.cancelled.get() && state.value.completedAnalysis?.gameFinished != true) {
                             if (sessionPosition != request.position) activeSession.setPosition(request.position)
                             publish(command) { it.copy(phase = EnginePhase.ANALYZING, continuousAnalyzing = true) }
                             while (!command.cancelled.get()) {
@@ -349,6 +350,7 @@ class KataGoViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 } else {
                     KataGoSession.open(application, accelerator, config.model, config.searchThreads)
+                }
                 }
             }
             when (config.computeMode) {
