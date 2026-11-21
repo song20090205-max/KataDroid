@@ -27,7 +27,7 @@ docker compose --env-file .env up --build -d
 docker compose --env-file .env logs -f
 ```
 
-The service listens only on `127.0.0.1:8080`. This is intentional. For access from the phone over the internet, place an HTTPS reverse proxy in front, configure TLS and rate limits, and expose only that proxy. Never expose port 8080 directly or commit the token.
+The service listens only on `127.0.0.1:8080`. This is intentional. For access from the phone over the internet, use the included Caddy HTTPS deployment below. Never expose port 8080 directly or commit the token.
 
 ## Public HTTPS endpoint
 
@@ -70,7 +70,7 @@ The service config reports win rates and score lead from Black's perspective. Th
 
 ## Important limits
 
-- This initial service is a working CPU-first foundation, not yet a deployed public cloud and not yet connected to the Android app.
+- The Android app's Local/Cloud/Hybrid client integration is included in this feature branch. The service itself is not deployed until a host, API token and public HTTPS endpoint are configured.
 - The Compose service uses one worker to avoid concurrent writes to a single analysis process. Scaling requires a worker pool with one process per worker and bounded queueing.
 - GPU acceleration is available as a separate `Dockerfile.cuda` build. It requires a compatible NVIDIA GPU, host driver, NVIDIA Container Toolkit and runtime qualification. It is not enabled by the CPU Dockerfile. Start it with `docker compose --env-file .env -f docker-compose.cuda.yml up --build -d`.
 - Free compute hosts can suspend or enforce quotas. No always-on GPU capacity is promised.
