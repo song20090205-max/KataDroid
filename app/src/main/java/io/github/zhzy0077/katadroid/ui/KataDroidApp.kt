@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.zhzy0077.katadroid.DiagnosticsScreen
 import io.github.zhzy0077.katadroid.engine.EnginePhase
 import io.github.zhzy0077.katadroid.engine.KataGoViewModel
+import io.github.zhzy0077.katadroid.engine.CloudTokenStore
 import io.github.zhzy0077.katadroid.ui.record.RecordScreen
 import io.github.zhzy0077.katadroid.ui.record.RecordViewModel
 import io.github.zhzy0077.katadroid.ui.record.TreeViewportState
@@ -149,8 +150,21 @@ fun KataDroidApp() {
             3 -> EngineScreen(settings.engineConfig, benchmark,
                 onConfig = { config ->
                     document.updatePreferences(settings.copy(model = config.model, backend = config.backend))
-                    engine.controller.setTarget(position, settings.engineEnabled, visible = false, maxVisits = settings.maxVisits, config = config)
-                }, onStart = { engine.controller.startBenchmark(settings.engineConfig, it) }, onCancel = engine.controller::cancelBenchmark,
+                    engine.controller.setTarget(position, settings.engineEnabled, visible = false, maxVisits = settings.maxVisits, config = settings.copy(model = config.model, backend = config.backend).engineConfig)
+                },
+                onCloudConfig = { mode, endpoint, token ->
+                    try {
+                        if (token != null) CloudTokenStore.save(hostContext, token)
+                        val updated = settings.copy(computeMode = mode, cloudEndpoint = endpoint)
+                        document.updatePreferences(updated)
+                        engine.controller.setTarget(position, updated.engineEnabled, visible = false,
+                            maxVisits = updated.maxVisits, config = updated.engineConfig)
+                    } catch (error: Exception) {
+                        document.message = error.message ?: resources.getString(R.string.cloud_save_failed)
+                    }
+                },
+                onClearCloudToken = { CloudTokenStore.clear(hostContext) },
+                onStart = { engine.controller.startBenchmark(settings.engineConfig, it) }, onCancel = engine.controller::cancelBenchmark,
                 onDiagnostics = { diagnosticsReturnPage = 3; page = 2 }, onBack = ::goBack)
             else -> RecordScreen(record, viewport, settings, engineState,
                 manualInput = !(autoTurn && settings.engineEnabled) && !document.busy,
