@@ -41,6 +41,22 @@ class BackendFallbackTest {
         assertEquals(listOf(Accelerator.GPU), attempts)
     }
 
+    @Test fun gpuPrecisionFallsBackUntilAReferenceValidatedModeOpens() {
+        val attempts = mutableListOf<com.google.ai.edge.litert.CompiledModel.GpuOptions.Precision>()
+        val chosen = openValidatedGpuSession { precision ->
+            attempts += precision
+            if (precision != com.google.ai.edge.litert.CompiledModel.GpuOptions.Precision.FP32)
+                throw IllegalStateException("Numerical reference mismatch")
+            session()
+        }
+        assertEquals("CPU", chosen.backend)
+        assertEquals(listOf(
+            com.google.ai.edge.litert.CompiledModel.GpuOptions.Precision.FP16,
+            com.google.ai.edge.litert.CompiledModel.GpuOptions.Precision.FP16_WITH_FP32_ACCUM,
+            com.google.ai.edge.litert.CompiledModel.GpuOptions.Precision.FP32,
+        ), attempts)
+    }
+
     @Test fun autoFallsBackToCpuWhenGpuCannotCompileOrValidate() {
         val attempts = mutableListOf<Accelerator>()
         val open: (Accelerator) -> AnalysisSession = {
