@@ -32,7 +32,6 @@ jobs:
           python3 -m unittest discover -s tools/tests
       - name: Build and check CPU-capable APK
         run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
-
       - name: Upload KataGo Master APK
         if: success()
         uses: actions/upload-artifact@v4
@@ -41,35 +40,35 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
-
+      - name: Download and verify Transformer model
+        run: |
+          MODEL=tf2-b10c384-s2941M-d5872M.kdmodel
+          curl --fail --location --retry 3 --retry-delay 3 --max-time 600 "https://github.com/zhzy0077/KataDroid/releases/download/v1.1.0-rc.1/tf2-b10c384-s2941M-d5872M.kdmodel" -o "$RUNNER_TEMP/$MODEL"
+          echo "4e88cc28ee362dca5b5ba8c494017932e5c0b2c433b0cde15bbaddde73b1cb80  $RUNNER_TEMP/$MODEL" | sha256sum --check
+          echo "MODEL_PATH=$RUNNER_TEMP/$MODEL" >> "$GITHUB_ENV"
       - name: Run instrumented tests and capture diagnostics
-        timeout-minutes: 45
+        timeout-minutes: 35
         uses: reactivecircus/android-emulator-runner@v2
         env:
           ANDROID_I_WANT_MY_TCG: yes
         with:
-          api-level: 35
-          target: google_atd
+          api-level: 34
+          target: google_apis
           arch: x86_64
           profile: pixel_2
           emulator-boot-timeout: 900
-          emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -cores 2 -memory 4096
           disable-animations: true
           script: |
             mkdir -p test-diagnostics
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest --console=plain --info > test-diagnostics/search-threads.log 2>&1 || echo "search-threads failed" > test-diagnostics/search-threads.exitcode
-            adb logcat -d -v threadtime > test-diagnostics/search-threads-logcat.txt 2>&1
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.ModelBenchmarkTest --console=plain --info > test-diagnostics/model-benchmark.log 2>&1 || echo "model-benchmark failed" > test-diagnostics/model-benchmark.exitcode
-            adb logcat -d -v threadtime > test-diagnostics/model-benchmark-logcat.txt 2>&1
-            MODEL=tf2-b10c384-s2941M-d5872M.kdmodel
-            URL=https://github.com/zhzy0077/KataDroid/releases/download/v1.1.0-rc.1/$MODEL
-            curl --fail --location --retry 3 --retry-delay 3 --max-time 600 "$URL" -o "/tmp/$MODEL" > test-diagnostics/transformer-download.log 2>&1
-            echo "4e88cc28ee362dca5b5ba8c494017932e5c0b2c433b0cde15bbaddde73b1cb80  /tmp/$MODEL" | sha256sum --check - >> test-diagnostics/transformer-download.log 2>&1
-            adb shell mkdir -p /sdcard/Android/data/io.github.zhzy0077.katadroid/files
-            adb push "/tmp/$MODEL" /sdcard/Android/data/io.github.zhzy0077.katadroid/files/ >> test-diagnostics/transformer-download.log 2>&1
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.OptionalModelIntegrationTest -Pandroid.testInstrumentationRunnerArguments.modelPackage="$MODEL" --console=plain --info > test-diagnostics/transformer-cpu.log 2>&1 || echo "transformer-cpu failed" > test-diagnostics/transformer-cpu.exitcode
-            adb logcat -d -v threadtime > test-diagnostics/transformer-cpu-logcat.txt 2>&1
-            cat test-diagnostics/*.log
+            adb shell getprop sys.boot_completed > test-diagnostics/emulator-health.txt
+            adb shell cmd package list packages > test-diagnostics/package-service-health.txt
+            adb push "$MODEL_PATH" /sdcard/Android/data/io.github.zhzy0077.katadroid/files/
+            adb logcat -c
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.zhzy0077.katadroid.SearchThreadStressTest,io.github.zhzy0077.katadroid.ModelBenchmarkTest,io.github.zhzy0077.katadroid.OptionalModelIntegrationTest -Pandroid.testInstrumentationRunnerArguments.modelPackage=tf2-b10c384-s2941M-d5872M.kdmodel --console=plain --info > test-diagnostics/instrumented-tests.log 2>&1
+            echo "instrumentation_exit=$?" > test-diagnostics/instrumented-tests.exitcode
+            adb logcat -d -v threadtime > test-diagnostics/emulator-logcat.txt 2>&1
+            cat test-diagnostics/instrumented-tests.log
       - name: Upload emulator test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
