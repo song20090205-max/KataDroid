@@ -21,9 +21,9 @@ class OptionalModelIntegrationTest {
         val arguments = InstrumentationRegistry.getArguments()
         val accelerator = Accelerator.valueOf(arguments.getString("backend") ?: "CPU")
         val name = arguments.getString("modelPackage")
-        assumeTrue("Supply -e modelPackage <external-files filename>", name != null)
+        assumeTrue("Supply -e modelPackage <app-files filename>", name != null)
         require(name!!.matches(Regex("[A-Za-z0-9_.-]+")))
-        val archive = File(context.getExternalFilesDir(null), name)
+        val archive = File(context.filesDir, name)
         require(archive.isFile)
         val spec = archive.inputStream().use { ModelPackages.install(context, it) }
         try {
