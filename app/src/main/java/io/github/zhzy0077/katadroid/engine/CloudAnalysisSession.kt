@@ -55,14 +55,15 @@ object CloudTokenStore {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key())
         val encrypted = cipher.doFinal(token.toByteArray(Charsets.UTF_8))
-        val output = file(context).startWrite()
+        val atomic = file(context)
+        val output = atomic.startWrite()
         try {
             output.write(cipher.iv.size)
             output.write(cipher.iv)
             output.write(encrypted)
-            file(context).finishWrite(output)
+            atomic.finishWrite(output)
         } catch (error: Exception) {
-            file(context).failWrite(output)
+            atomic.failWrite(output)
             throw error
         }
     }
@@ -283,20 +284,28 @@ class CloudAnalysisSession(
 /** Cloud-first wrapper that transparently falls back to the validated local engine. */
 class HybridAnalysisSession(
     private val cloud: CloudAnalysisSession,
-    private val local: AnalysisSession,
+    private val localFactory: () -> AnalysisSession,
 ) : AnalysisSession {
     private var cloudActive = true
-    override val backend: String get() = if (cloudActive) "CLOUD" else local.backend
+    private var local: AnalysisSession? = null
+    private var currentPosition: AnalysisPosition? = null
+    override val backend: String get() = if (cloudActive) "CLOUD" else checkNotNull(local).backend
     override val supportsTimedAnalysis: Boolean = false
 
+    private fun localSession(): AnalysisSession = local ?: localFactory().also {
+        currentPosition?.let(it::setPosition)
+        local = it
+    }
+
     override fun setPosition(position: AnalysisPosition) {
+        currentPosition = position
         cloud.setPosition(position)
-        local.setPosition(position)
+        local?.setPosition(position)
     }
 
     override fun resetForBenchmark(position: AnalysisPosition) {
-        cloud.resetForBenchmark(position)
-        local.resetForBenchmark(position)
+        setPosition(position)
+        local?.resetForBenchmark(position)
     }
 
     override fun analyze(visits: Int, cancelled: AtomicBoolean): PositionAnalysis? {
@@ -310,11 +319,12 @@ class HybridAnalysisSession(
                 cloudActive = false
             }
         }
-        return local.analyze(visits, cancelled)
+        return localSession().analyze(visits, cancelled)
     }
 
     override fun close() {
         cloud.close()
-        local.close()
+        local?.close()
+        local = null
     }
 }
