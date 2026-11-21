@@ -293,4 +293,5 @@
     <string name="cloud_save_failed">無法儲存雲端設定。</string>
     <string name="backend_local_fallback_hint">裝置選擇只影響手機本機運算及混合模式的本機備援。</string>
 
+    <string name="cloud_server_model">雲端伺服器模型</string>
 </resources>
