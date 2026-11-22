@@ -49,7 +49,7 @@ fun EngineScreen(
     val context = LocalContext.current
     var visits by rememberSaveable { mutableIntStateOf(500) }
     var computeMode by rememberSaveable(config.computeMode) { mutableStateOf(config.computeMode) }
-    var cloudEndpoint by rememberSaveable(config.cloudEndpoint) { mutableStateOf(config.cloudEndpoint) }
+    var cloudEndpoint by rememberSaveable(config.cloudEndpoint) { mutableStateOf(config.cloudEndpoint.ifBlank { "https://read19.com" }) }
     var cloudToken by remember { mutableStateOf("") }
     var cloudTokenConfigured by remember { mutableStateOf(CloudTokenStore.isConfigured(context)) }
     var catalogRevision by remember { mutableIntStateOf(0) }
@@ -155,8 +155,8 @@ fun EngineScreen(
                         },
                         enabled = (computeMode == ComputeMode.LOCAL ||
                             (cloudEndpoint.startsWith("https://", ignoreCase = true) &&
-                                (cloudToken.length >= 16 || cloudTokenConfigured))) &&
-                            (cloudToken.isBlank() || cloudToken.length >= 16),
+                                (cloudToken.startsWith("kg_live_") && cloudToken.length >= 16 || cloudTokenConfigured))) &&
+                            (cloudToken.isBlank() || (cloudToken.startsWith("kg_live_") && cloudToken.length >= 16)),
                         modifier = Modifier.weight(1f).testTag("save-cloud-settings")
                     ) { Text(resources.getString(R.string.cloud_save)) }
                     if (cloudTokenConfigured) {
