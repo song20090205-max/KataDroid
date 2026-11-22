@@ -56,6 +56,19 @@ data class AppPreferences(
     companion object {
         fun load(context: Context): AppPreferences {
             val p = context.getSharedPreferences("board_preferences", Context.MODE_PRIVATE)
+            val savedMode = runCatching {
+                ComputeMode.valueOf(p.getString("compute_mode", "HYBRID")!!)
+            }.getOrDefault(ComputeMode.HYBRID)
+            // This feature branch is moving the app to cloud-first operation.
+            // Preserve an explicit Cloud/Hybrid choice; migrate the former Local default once.
+            val migratedMode = if (!p.getBoolean("cloud_first_mode_migrated", false) &&
+                savedMode == ComputeMode.LOCAL) ComputeMode.HYBRID else savedMode
+            if (!p.getBoolean("cloud_first_mode_migrated", false)) {
+                p.edit {
+                    putBoolean("cloud_first_mode_migrated", true)
+                    putString("compute_mode", migratedMode.name)
+                }
+            }
             return AppPreferences(p.getBoolean("coordinates", true), p.getBoolean("candidates", true),
                 p.getBoolean("engine_enabled", true),
                 p.getInt("max_visits", 500).coerceIn(1, MAX_VISITS), p.getInt("touch_offset_px", 0).coerceIn(0, 300),
@@ -64,8 +77,7 @@ data class AppPreferences(
                 p.getFloat("komi", 7.5f).takeIf(::validKomi) ?: 7.5f,
                 KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)),
                 ComputeProfile.fromId(p.getString("compute_profile", null)),
-                runCatching { ComputeMode.valueOf(p.getString("compute_mode", "HYBRID")!!) }.getOrDefault(ComputeMode.LOCAL),
-                p.getString("cloud_endpoint", "") ?: "")
+                migratedMode, p.getString("cloud_endpoint", "") ?: "")
         }
     }
 }
