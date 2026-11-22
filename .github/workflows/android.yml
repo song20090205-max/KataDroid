@@ -62,13 +62,28 @@ jobs:
           arch: x86_64
           profile: pixel_2
           emulator-boot-timeout: 900
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -cores 2 -memory 4096
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -cores 4 -memory 3072
           disable-animations: true
           script: |
             set -eu
             mkdir -p test-diagnostics
             adb shell getprop sys.boot_completed > test-diagnostics/emulator-health.txt
-            adb shell cmd package list packages > test-diagnostics/package-service-health.txt
+            # Wait for Android framework services; boot-complete alone is not enough.
+            package_ready=0
+            for attempt in 1 2 3 4 5 6; do
+              if adb shell cmd package list packages > test-diagnostics/package-service-health.txt 2>&1; then
+                package_ready=1
+                break
+              fi
+              echo "Package manager not ready (attempt $attempt/6)."
+              adb shell getprop sys.boot_completed >> test-diagnostics/emulator-health.txt 2>&1 || true
+              adb shell getprop init.svc.bootanim >> test-diagnostics/emulator-health.txt 2>&1 || true
+              sleep 10
+            done
+            if [ "$package_ready" -ne 1 ]; then
+              adb logcat -d -v threadtime > test-diagnostics/emulator-startup-failure.log 2>&1 || true
+              exit 1
+            fi
             # Remove snapshot leftovers so a stale debug signature cannot block installation.
             adb uninstall io.github.zhzy0077.katadroid >/dev/null 2>&1 || true
             adb uninstall io.github.zhzy0077.katadroid.test >/dev/null 2>&1 || true
