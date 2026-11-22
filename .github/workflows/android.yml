@@ -75,14 +75,8 @@ jobs:
             adb install app/build/outputs/apk/debug/app-debug.apk
             adb install -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             adb logcat -c
-            set +e
-            timeout 300 adb shell am instrument -w -r -e class io.github.zhzy0077.katadroid.EngineIntegrationTest#officialRulesHandleCapturesSuicideKoAndPassesAndReplayEveryDemoBranch io.github.zhzy0077.katadroid.test/androidx.test.runner.AndroidJUnitRunner > test-diagnostics/instrumented-tests.log 2>&1
-            test_exit=$?
-            set -e
-            echo "instrumentation_exit=$test_exit" > test-diagnostics/instrumented-tests.exitcode
-            adb logcat -d -v threadtime > test-diagnostics/emulator-logcat.txt 2>&1
-            cat test-diagnostics/instrumented-tests.log
-            exit "$test_exit"
+            # Keep execution, status capture, and exit in one command because this runner isolates script lines.
+            if timeout 300 adb shell am instrument -w -r -e class io.github.zhzy0077.katadroid.EngineIntegrationTest#officialRulesHandleCapturesSuicideKoAndPassesAndReplayEveryDemoBranch io.github.zhzy0077.katadroid.test/androidx.test.runner.AndroidJUnitRunner > test-diagnostics/instrumented-tests.log 2>&1; then test_exit=0; else test_exit=$?; fi; echo "instrumentation_exit=$test_exit" > test-diagnostics/instrumented-tests.exitcode; adb logcat -d -v threadtime > test-diagnostics/emulator-logcat.txt 2>&1 || true; cat test-diagnostics/instrumented-tests.log; exit "$test_exit"
       - name: Upload emulator test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
