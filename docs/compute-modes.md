@@ -1,12 +1,12 @@
 # Compute modes: local, cloud and hybrid
 
-Status: architecture specification; this document does not claim that cloud execution is implemented.
+Status: Android client routing and the authenticated cloud API implementation are present. A live public GPU endpoint is not yet deployed or verified.
 
 ## User-facing modes
 
 - **Local**: the existing in-process KataGo engine owns search and inference. It works offline and is the stability baseline.
 - **Cloud**: a configured remote KataGo service owns search. The Android app sends a complete, validated position and receives a legal move plus analysis. Cloud mode must report a connection/service error rather than silently pretending that a local search was a cloud result.
-- **Hybrid**: cloud search is preferred; local KataGo remains available as a fallback when the remote service is unavailable or times out. The UI must always identify the source of the current result.
+- **Hybrid (default)**: cloud search is always attempted first; local KataGo is opened only after a cloud connection, authentication, protocol or search failure. The UI must always identify the source of the current result. New installations default to Hybrid.
 
 Hybrid is intentionally not described as merging two independent MCTS visit trees. KataGo's search trees, neural-network versions, rules, komi, and search parameters must match before visit statistics can be meaningfully combined. A future cooperative-search protocol would need explicit support from both engines.
 
@@ -44,9 +44,9 @@ The client must validate response IDs, move legality, board dimensions, rules an
 
 ## Rollout gates
 
-1. Preserve the existing local engine as the known-good baseline.
-2. Add the mode preference and UI only together with real engine routing and truthful connection/source status.
-3. Implement and test the remote protocol/server independently before enabling Cloud mode in production.
+1. Preserve the existing local engine as the known-good baseline; make Hybrid the default while retaining explicit Local and Cloud choices.
+2. Keep the mode preference and UI coupled to real engine routing and truthful connection/source status.
+3. Deploy and qualify a real GPU-backed remote service before treating Cloud/Hybrid as fully operational.
 4. Test malformed responses, disconnects, timeouts, cancellation, stale responses, illegal moves and fallback.
 5. Compare Local, Cloud and Hybrid under identical positions, rules, model and time/visit budgets. Report win rate and completed visits, not visits/s alone.
 
