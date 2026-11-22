@@ -119,7 +119,9 @@ class Read19AnalysisSession(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                failure.compareAndSet(null, t)
+                // Do not propagate OkHttp's request exception: it may contain the credential URL.
+                val status = response?.code?.let { "HTTP $it" } ?: "network error"
+                failure.compareAndSet(null, IllegalStateException("Read19 WebSocket connection failed ($status)"))
                 opened.countDown()
                 completed.countDown()
             }
@@ -134,20 +136,39 @@ class Read19AnalysisSession(
         socketRef.compareAndSet(null, socket)
 
         try {
-            if (!opened.await(25, TimeUnit.SECONDS)) {
-                throw IllegalStateException("Timed out connecting to Read19")
+            // Poll the connection latch so changing position can cancel promptly.
+            val connectDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(25)
+            while (opened.count > 0) {
+                if (cancelled.get()) throw CancellationException("Read19 analysis cancelled")
+                if (System.nanoTime() >= connectDeadline) {
+                    throw IllegalStateException("Timed out connecting to Read19")
+                }
+                opened.await(150, TimeUnit.MILLISECONDS)
             }
             failure.get()?.let { throw it }
+
+            // A broken or stalled remote job must not leave the analysis worker blocked forever.
+            val analysisDeadline = System.nanoTime() + TimeUnit.MINUTES.toNanos(5)
             while (!completed.await(150, TimeUnit.MILLISECONDS)) {
                 if (cancelled.get()) throw CancellationException("Read19 analysis cancelled")
                 failure.get()?.let { throw it }
+                if (System.nanoTime() >= analysisDeadline) {
+                    throw IllegalStateException("Read19 analysis timed out after 5 minutes")
+                }
             }
             if (cancelled.get()) throw CancellationException("Read19 analysis cancelled")
             failure.get()?.let { throw it }
             val response = checkNotNull(finalResponse.get()) { "Read19 ended without a final analysis response" }
             return parseResponse(current, response, requestId)
         } finally {
-            socketRef.get()?.close(1000, "analysis complete")
+            // Read19 supports cancelling one query without ending the WSS protocol first.
+            if (cancelled.get()) {
+                socketRef.get()?.send(JSONObject()
+                    .put("action", "terminate")
+                    .put("terminateId", requestId)
+                    .toString())
+            }
+            socketRef.get()?.close(1000, if (cancelled.get()) "analysis cancelled" else "analysis complete")
         }
     }
 
