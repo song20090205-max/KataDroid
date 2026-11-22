@@ -18,7 +18,7 @@ Docker Engine with Compose plugin. For the first smoke test, use a host with eno
 ## Prepare files
 
 1. Copy `.env.example` to `.env` and set a long random `KATAGO_API_TOKEN`. Keep `.env` private.
-2. Run `bash download_model.sh` to fetch the official large b11c768 neural-network model into `models/model.bin.gz` (about 212 MB). The model is separate from the Android `.kdmodel` file; the two formats are not interchangeable.
+2. Run `bash download_model.sh` to fetch the exact official `kata1-tf3-b11c768-s11003M-d5973M-7gres` network by resolving its download link from the official network catalogue into `models/model.bin.gz`. The selected network name and SHA-256 are printed after download. The model is separate from the Android `.kdmodel` file; the two formats are not interchangeable.
 3. The image includes KataGo's official `analysis_example.cfg` as a working baseline. It reports win rates and score lead from Black's perspective; keep `reportAnalysisWinratesAs = BLACK` in any custom config so the Android app interprets evaluations correctly. For performance tuning, copy it out, adjust `numSearchThreadsPerAnalysisThread`, `nnMaxBatchSize`, and `nnCacheSizePowerOfTwo` for the actual host, then mount your tuned config read-only. Do not blindly copy GPU settings into a CPU host.
 4. Build and start:
 
