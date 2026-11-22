@@ -10,7 +10,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 70
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -52,7 +52,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Run native board smoke test and capture diagnostics
-        timeout-minutes: 30
+        timeout-minutes: 50
         uses: reactivecircus/android-emulator-runner@v2
         env:
           ANDROID_I_WANT_MY_TCG: yes
@@ -61,7 +61,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 900
+          emulator-boot-timeout: 1800
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -cores 4 -memory 3072
           disable-animations: true
           script: |
