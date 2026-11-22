@@ -18,14 +18,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Read19 cloud adapter.
  *
  * Read19 documents a KataGo Analysis Engine JSON WebSocket at
- * wss://read19.com/v1/katago. The analysis key is sent in the Authorization
- * handshake header; it is never placed in the URL or logs.
+ * wss://read19.com/v1/katago/{API_KEY}. The credential is part of the URL
+ * path as required by Read19 and must never be logged or shown in diagnostics.
  */
 class Read19AnalysisSession(
     endpoint: String,
     private val token: String,
 ) : AnalysisSession {
-    private val websocketUrl: String = toWebSocketUrl(endpoint)
+    private val websocketUrl: String = toWebSocketUrl(endpoint, token)
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.MILLISECONDS)
@@ -84,7 +84,6 @@ class Read19AnalysisSession(
 
         val request = Request.Builder()
             .url(websocketUrl)
-            .header("Authorization", "Bearer $token")
             .header("Origin", "https://read19.com")
             .build()
 
@@ -233,7 +232,7 @@ class Read19AnalysisSession(
     }
 
     companion object {
-        private fun toWebSocketUrl(endpoint: String): String {
+        private fun toWebSocketUrl(endpoint: String, token: String): String {
             val base = endpoint.trim().trimEnd('/')
             require(base.startsWith("https://", true)) { "Read19 endpoint must use HTTPS" }
             val parsed = java.net.URL(base)
@@ -241,7 +240,7 @@ class Read19AnalysisSession(
                 "Read19 endpoint must be a Read19 HTTPS address"
             }
             require(parsed.userInfo == null && parsed.query == null && parsed.ref == null) { "Invalid Read19 endpoint" }
-            return "wss://${parsed.host}/v1/katago"
+            return "wss://${parsed.host}/v1/katago/${java.net.URLEncoder.encode(token, Charsets.UTF_8.name())}"
         }
     }
 }
