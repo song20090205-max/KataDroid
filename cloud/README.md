@@ -41,6 +41,26 @@ The default Compose file binds port 8080 to loopback only. To expose the API saf
 
 A public DNS name and a host reachable from the internet are required for this direct HTTPS setup. If you do not have either, the server can still run privately, but the phone cannot reach it over the public internet yet. Do not disable TLS or place the API token in a URL.
 
+## Cloudflare Tunnel (recommended for a home host)
+
+The optional `docker-compose.cloudflare.yml` overlay connects the private API to a Cloudflare Tunnel. It avoids opening inbound ports on the host and does not require a public IP address. Cloudflare provides HTTPS ingress; KataGo still runs on this Docker host.
+
+1. Add a tunnel in the Cloudflare dashboard: **Zero Trust → Networks → Tunnels → Create tunnel**. Choose the Docker connector and copy its tunnel token. Do not paste the token into chat or commit it to Git.
+2. In the tunnel's **Public Hostname** / published application route, add a hostname in a DNS zone managed by your Cloudflare account. Set the service type to **HTTP** and the origin to `katago-cloud:8080`. The hostname must resolve through this tunnel.
+3. Put the tunnel token in the private `.env` file as `CLOUDFLARE_TUNNEL_TOKEN=...`. Keep the existing `KATAGO_API_TOKEN` too.
+4. Start the CPU service and tunnel:
+
+```sh
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.cloudflare.yml up --build -d
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.cloudflare.yml logs -f cloudflared
+```
+
+5. In KataGo Master, set the cloud endpoint to `https://<your-cloudflare-hostname>` and enter the `KATAGO_API_TOKEN` as the API token.
+
+The Android client authenticates analysis requests with the KataGo bearer token. Do not rely on Cloudflare Access browser-login pages for this native API endpoint; an interactive login flow is not the same as the app's bearer-token authentication. Keep the API token long and private. You can add Cloudflare WAF/rate-limit rules as an additional layer, but do not remove API authentication.
+
+To stop the tunnel, use the same Compose files with `down`. The overlay does not enable GPU: for CUDA inference use the CUDA Compose file together with the tunnel overlay, and qualify the GPU host and model before treating it as production-ready.
+
 ## API
 
 - `GET /v1/healthz`: non-sensitive liveness probe.
