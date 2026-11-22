@@ -288,7 +288,7 @@ class CloudAnalysisSession(
 
 /** Cloud-first wrapper that transparently falls back to the validated local engine. */
 class HybridAnalysisSession(
-    private val cloud: CloudAnalysisSession,
+    private val cloud: AnalysisSession,
     private val localFactory: () -> AnalysisSession,
 ) : AnalysisSession {
     private var cloudActive = true
