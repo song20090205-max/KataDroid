@@ -33,7 +33,7 @@ data class AppPreferences(
     val model: KataGoModel = KataGoModel.B6,
     val backend: EngineBackend = EngineBackend.AUTO,
     val computeProfile: ComputeProfile = ComputeProfile.POWER_SAVING,
-    val computeMode: ComputeMode = ComputeMode.LOCAL,
+    val computeMode: ComputeMode = ComputeMode.HYBRID,
     val cloudEndpoint: String = "",
 ) {
     val engineConfig get() = EngineConfig(model, backend, computeProfile.searchThreads, computeMode, cloudEndpoint)
@@ -64,7 +64,7 @@ data class AppPreferences(
                 p.getFloat("komi", 7.5f).takeIf(::validKomi) ?: 7.5f,
                 KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)),
                 ComputeProfile.fromId(p.getString("compute_profile", null)),
-                runCatching { ComputeMode.valueOf(p.getString("compute_mode", "LOCAL")!!) }.getOrDefault(ComputeMode.LOCAL),
+                runCatching { ComputeMode.valueOf(p.getString("compute_mode", "HYBRID")!!) }.getOrDefault(ComputeMode.LOCAL),
                 p.getString("cloud_endpoint", "") ?: "")
         }
     }
