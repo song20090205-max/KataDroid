@@ -286,7 +286,7 @@
     <string name="cloud_token">雲端 API Token</string>
     <string name="cloud_token_saved">Token 已使用 Android Keystore 加密儲存。</string>
     <string name="cloud_token_missing">尚未設定雲端 Token。</string>
-    <string name="cloud_model_note">雲端模式使用伺服器端模型；手機模型只用於本機模式及混合模式備援。</string>
+    <string name="cloud_model_note">雲端優先模式先使用伺服器端 TF3；雲端失敗時才使用手機已匯入的模型備援。TF3 本機匯入需使用 .kdmodel 套件。</string>
     <string name="cloud_save">儲存雲端設定</string>
     <string name="cloud_clear_token">清除 Token</string>
     <string name="cloud_https_hint">遠端連線只允許 HTTPS。請輸入伺服器根網址，不要附加 /v1/analyze。</string>
