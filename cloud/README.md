@@ -4,9 +4,10 @@ This directory contains an optional, self-hostable KataGo analysis API. It is **
 
 ## Current project decision
 
-- The Android app's default compute mode is `LOCAL`. Keep it that way unless a suitable remote host has been independently confirmed.
+- The Android app uses `HYBRID` as its default compute mode: it tries Read19 when a valid `kg_live_` analysis key is configured and falls back to the selected local model if the cloud connection fails. Without a valid key, it stays on local analysis.
 - Do not use Kaggle Notebooks, Colab runtimes, or other interactive notebook sessions as a persistent API host, public proxy, or tunnel-backed server.
 - The former Kaggle + Cloudflare Quick Tunnel workflow has been retired. The Kaggle notebook is now an archival notice only.
+- Read19 is the supported hosted cloud provider in the Android app. Its adapter uses the documented KataGo JSON WebSocket at `wss://read19.com/v1/katago` with an `Authorization: Bearer kg_live_...` header. The app defaults the endpoint field to `https://read19.com`.
 - No always-on free GPU host is assumed or promised. Do not create replacement accounts or work around a platform suspension.
 - The exact cloud model configured by this project remains `kata1-tf3-b11c768-s11003M-d5973M-7gres`; do not silently substitute another network.
 
@@ -19,7 +20,7 @@ This directory contains an optional, self-hostable KataGo analysis API. It is **
 - CPU Eigen and optional CUDA Docker build definitions.
 - HTTPS reverse-proxy configuration for a host that the operator owns and is authorized to administer.
 
-The cloud service is separate from the Android app's bundled LiteRT model files. The formats are not interchangeable.
+The self-hosted FastAPI service is separate from the Read19 adapter and from the Android app's bundled LiteRT model files. The Read19 server chooses its own cloud model; it does not use the locally selected model or guarantee the pinned network listed above. The formats are not interchangeable.
 
 ## Requirements for a future self-hosted deployment
 
