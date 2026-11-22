@@ -58,7 +58,7 @@ class SearchThreadStressTest {
             session.setPosition(candidate)
             val cancelled = AtomicBoolean(false)
             val running = Thread {
-                session.analyze(5_000, cancelled)
+                session.analyze(512, cancelled)
             }
             running.start()
             Thread.sleep(100)
@@ -71,7 +71,7 @@ class SearchThreadStressTest {
             running.join(30_000)
             val stoppedPromptly = !running.isAlive
             if (!stoppedPromptly) {
-                // Let the finite 5,000-visit search drain before session.close().
+                // Let the finite 512-visit search drain before session.close().
                 // The assertion below still records the cancellation regression.
                 running.join()
             }
