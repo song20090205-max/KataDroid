@@ -72,7 +72,7 @@ data class EngineConfig(
     val backend: EngineBackend = EngineBackend.AUTO,
     val searchThreads: Int = 1,
     val computeMode: ComputeMode = ComputeMode.LOCAL,
-    val cloudEndpoint: String = "",
+    val cloudEndpoint: String = "https://read19.com",
 ) {
     init { require(searchThreads in 1..4) }
     val accelerator get() = backend.accelerator()
