@@ -51,7 +51,7 @@ object CloudTokenStore {
 
     @Synchronized
     fun save(context: Context, token: String) {
-        require(token.length in 16..512) { "Cloud API token must contain 16–512 characters" }
+        require(token.startsWith("kg_live_") && token.length in 16..512) { "Read19 analysis key must start with kg_live_ and contain at most 512 characters" }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key())
         val encrypted = cipher.doFinal(token.toByteArray(Charsets.UTF_8))
@@ -85,7 +85,7 @@ object CloudTokenStore {
         runCatching { KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(KEY_ALIAS) }
     }
 
-    fun isConfigured(context: Context) = read(context) != null
+    fun isConfigured(context: Context) = read(context)?.startsWith("kg_live_") == true
 }
 
 /** A stateless client for the versioned remote KataGo analysis API. */
