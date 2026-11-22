@@ -359,10 +359,10 @@ class KataGoViewModel(application: Application) : AndroidViewModel(application) 
             }
             when (config.computeMode) {
                 ComputeMode.LOCAL -> localFactory()
-                ComputeMode.CLOUD -> CloudAnalysisSession(config.cloudEndpoint, CloudTokenStore.read(application).orEmpty())
+                ComputeMode.CLOUD -> Read19AnalysisSession(config.cloudEndpoint, CloudTokenStore.read(application).orEmpty())
                 ComputeMode.HYBRID -> {
                     val cloud = runCatching {
-                        CloudAnalysisSession(config.cloudEndpoint, CloudTokenStore.read(application).orEmpty())
+                        Read19AnalysisSession(config.cloudEndpoint, CloudTokenStore.read(application).orEmpty())
                     }.getOrNull()
                     if (cloud == null) localFactory() else HybridAnalysisSession(cloud, localFactory)
                 }
