@@ -34,7 +34,7 @@ data class AppPreferences(
     val backend: EngineBackend = EngineBackend.AUTO,
     val computeProfile: ComputeProfile = ComputeProfile.POWER_SAVING,
     val computeMode: ComputeMode = ComputeMode.HYBRID,
-    val cloudEndpoint: String = "",
+    val cloudEndpoint: String = "https://read19.com",
 ) {
     val engineConfig get() = EngineConfig(model, backend, computeProfile.searchThreads, computeMode, cloudEndpoint)
     fun automatic(color: Int) = if (color == 1) autoBlack else autoWhite
@@ -77,7 +77,7 @@ data class AppPreferences(
                 p.getFloat("komi", 7.5f).takeIf(::validKomi) ?: 7.5f,
                 KataGoModel.fromId(p.getString("model", null)), EngineBackend.fromId(p.getString("backend", null)),
                 ComputeProfile.fromId(p.getString("compute_profile", null)),
-                migratedMode, p.getString("cloud_endpoint", "") ?: "")
+                migratedMode, p.getString("cloud_endpoint", "https://read19.com")?.ifBlank { "https://read19.com" } ?: "https://read19.com")
         }
     }
 }
