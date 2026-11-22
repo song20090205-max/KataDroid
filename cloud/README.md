@@ -7,7 +7,7 @@ This directory contains an optional, self-hostable KataGo analysis API. It is **
 - The Android app uses `HYBRID` as its default compute mode: it tries Read19 when a valid `kg_live_` analysis key is configured and falls back to the selected local model if the cloud connection fails. Without a valid key, it stays on local analysis.
 - Do not use Kaggle Notebooks, Colab runtimes, or other interactive notebook sessions as a persistent API host, public proxy, or tunnel-backed server.
 - The former Kaggle + Cloudflare Quick Tunnel workflow has been retired. The Kaggle notebook is now an archival notice only.
-- Read19 is the supported hosted cloud provider in the Android app. Its adapter uses the documented KataGo JSON WebSocket at `wss://read19.com/v1/katago` with an `Authorization: Bearer kg_live_...` header. The app defaults the endpoint field to `https://read19.com`.
+- Read19 is the supported hosted cloud provider in the Android app. Its documented KataGo JSON WebSocket URL is `wss://read19.com/v1/katago/<API_KEY>`; the API key is embedded in the URL path, not sent as an Authorization header. Treat the complete WSS URL as a secret and never log, screenshot, or commit it. The app's endpoint setting accepts the HTTPS base `https://read19.com` and constructs the WSS URL internally.
 - No always-on free GPU host is assumed or promised. Do not create replacement accounts or work around a platform suspension.
 - The exact cloud model configured by this project remains `kata1-tf3-b11c768-s11003M-d5973M-7gres`; do not silently substitute another network.
 
