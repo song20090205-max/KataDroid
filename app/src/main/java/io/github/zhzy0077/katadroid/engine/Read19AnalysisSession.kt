@@ -74,6 +74,7 @@ class Read19AnalysisSession(
             .put("analyzeTurns", JSONArray().put(current.moves.size))
             .put("maxVisits", visits)
             .put("reportDuringSearchEvery", 1.0)
+            .put("overrideSettings", JSONObject().put("reportAnalysisWinratesAs", "BLACK"))
 
         val opened = CountDownLatch(1)
         val completed = CountDownLatch(1)
@@ -166,10 +167,10 @@ class Read19AnalysisSession(
             else -> error("Read19 returned an unknown currentPlayer")
         }
         check(reportedPlayer == current.nextPlayer) { "Read19 analyzed the wrong player to move" }
-        val rootWinRate = root.getDouble("winrate")
-        val blackWinRate = toBlackWinRate(rootWinRate, reportedPlayer)
-        val blackLead = toBlackLead(root.getDouble("scoreLead"), reportedPlayer)
-        val scoreMean = toBlackLead(root.optDouble("scoreSelfplay", blackLead.toDouble()), reportedPlayer)
+        // The query explicitly requests BLACK perspective so the UI remains consistent with local analysis.
+        val blackWinRate = root.getDouble("winrate").toFloat() * 100f
+        val blackLead = root.getDouble("scoreLead").toFloat()
+        val scoreMean = root.optDouble("scoreSelfplay", blackLead.toDouble()).toFloat()
         require(blackWinRate.isFinite() && blackWinRate in 0f..100f && blackLead.isFinite() && scoreMean.isFinite()) {
             "Read19 returned invalid evaluation values"
         }
@@ -184,8 +185,8 @@ class Read19AnalysisSession(
             val pv = (0 until pvJson.length()).mapNotNull { pvIndex ->
                 runCatching { fromGtp(pvJson.getString(pvIndex)) }.getOrNull()
             }.ifEmpty { listOf(move) }
-            val candidateWinRate = toBlackWinRate(info.getDouble("winrate"), reportedPlayer)
-            val candidateLead = toBlackLead(info.getDouble("scoreLead"), reportedPlayer)
+            val candidateWinRate = info.getDouble("winrate").toFloat() * 100f
+            val candidateLead = info.getDouble("scoreLead").toFloat()
             require(candidateWinRate.isFinite() && candidateLead.isFinite()) { "Read19 returned invalid candidate evaluation" }
             AnalysisCandidate(
                 label = ('A' + index).toString(),
@@ -212,16 +213,6 @@ class Read19AnalysisSession(
             gameFinished = finished,
             bestMove = bestMove,
         )
-    }
-
-    private fun toBlackWinRate(winRate: Double, playerToMove: Int): Float {
-        require(winRate.isFinite() && winRate in 0.0..1.0) { "Read19 winrate is outside 0..1" }
-        return ((if (playerToMove == 1) winRate else 1.0 - winRate) * 100.0).toFloat()
-    }
-
-    private fun toBlackLead(lead: Double, playerToMove: Int): Float {
-        require(lead.isFinite()) { "Read19 scoreLead is not finite" }
-        return (if (playerToMove == 1) lead else -lead).toFloat()
     }
 
     private fun toGtp(point: Int): String {
