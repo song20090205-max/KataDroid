@@ -1,122 +1,60 @@
 # KataGo Cloud Engine
 
-A self-hostable, authenticated HTTP service that runs the real KataGo analysis engine. The first implementation is deliberately conservative: one persistent KataGo worker, serialized analysis requests, bounded visit budgets, and a private-by-default network binding.
+This directory contains an optional, self-hostable KataGo analysis API. It is **not a free hosted service** and is not deployed by this repository.
 
-## Current scope
+## Current project decision
 
-- Real KataGo analysis-mode subprocess; not a mock engine and not phone-side computation.
-- Complete board state: board dimensions, rules, komi, initial setup stones, side to move and move history.
+- The Android app's default compute mode is `LOCAL`. Keep it that way unless a suitable remote host has been independently confirmed.
+- Do not use Kaggle Notebooks, Colab runtimes, or other interactive notebook sessions as a persistent API host, public proxy, or tunnel-backed server.
+- The former Kaggle + Cloudflare Quick Tunnel workflow has been retired. The Kaggle notebook is now an archival notice only.
+- No always-on free GPU host is assumed or promised. Do not create replacement accounts or work around a platform suspension.
+- The exact cloud model configured by this project remains `kata1-tf3-b11c768-s11003M-d5973M-7gres`; do not silently substitute another network.
+
+## What is included
+
+- A FastAPI service that invokes the real KataGo analysis engine.
+- Complete 19x19 board state, rules, komi, setup stones and move history.
 - Versioned JSON API, request IDs, model SHA-256, visit budgets and analysis output.
-- Bearer-token authentication, bounded payloads/searches, request serialization and worker restart after timeout.
-- CPU Eigen build as the portable baseline. A CUDA worker image and multi-worker scheduling are separate qualification steps; do not label this CPU image as GPU.
-- No public endpoint is exposed by the default Compose file.
+- Bearer-token authentication, bounded payloads/searches, serialized requests and worker restart after timeout.
+- CPU Eigen and optional CUDA Docker build definitions.
+- HTTPS reverse-proxy configuration for a host that the operator owns and is authorized to administer.
 
-## Requirements
+The cloud service is separate from the Android app's bundled LiteRT model files. The formats are not interchangeable.
 
-Docker Engine with Compose plugin. For the first smoke test, use a host with enough memory for the chosen KataGo network. Model files and analysis configuration are intentionally not committed.
+## Requirements for a future self-hosted deployment
 
-## Prepare files
+Only proceed when you have a host you are authorized to use, adequate memory/compute, and a network setup that permits this service. A GPU deployment additionally requires a compatible NVIDIA GPU, host driver and NVIDIA Container Toolkit. A public endpoint requires a domain and HTTPS reverse proxy. Do not expose port 8080 directly and do not put the API token in the APK, source control, a URL, or a public notebook.
 
-1. Copy `.env.example` to `.env` and set a long random `KATAGO_API_TOKEN`. Keep `.env` private.
-2. Run `bash download_model.sh` to fetch the exact official `kata1-tf3-b11c768-s11003M-d5973M-7gres` network by resolving its download link from the official network catalogue into `models/model.bin.gz`. The selected network name and SHA-256 are printed after download. The model is separate from the Android `.kdmodel` file; the two formats are not interchangeable.
-3. The image includes KataGo's official `analysis_example.cfg` as a working baseline. It reports win rates and score lead from Black's perspective; keep `reportAnalysisWinratesAs = BLACK` in any custom config so the Android app interprets evaluations correctly. For performance tuning, copy it out, adjust `numSearchThreadsPerAnalysisThread`, `nnMaxBatchSize`, and `nnCacheSizePowerOfTwo` for the actual host, then mount your tuned config read-only. Do not blindly copy GPU settings into a CPU host.
-4. Build and start:
+1. Copy `.env.example` to `.env` on the host and set a private, long `KATAGO_API_TOKEN`.
+2. Run `bash download_model.sh` to fetch the pinned official model into `models/model.bin.gz`.
+3. For a CPU-only private smoke test, run:
 
-```sh
-docker compose --env-file .env up --build -d
-docker compose --env-file .env logs -f
-```
+   ```sh
+   docker compose --env-file .env up --build -d
+   docker compose --env-file .env logs -f
+   ```
 
-The service listens only on `127.0.0.1:8080`. This is intentional. For access from the phone over the internet, use the included Caddy HTTPS deployment below. Never expose port 8080 directly or commit the token.
-
-## Public HTTPS endpoint
-
-The default Compose file binds port 8080 to loopback only. To expose the API safely to the phone:
-
-1. Set `CADDY_DOMAIN` in `.env` to a DNS name whose A/AAAA records point to this host.
-2. Allow inbound TCP 80/443 (and optionally UDP 443) on the host firewall.
-3. Start the CPU service with `docker compose --env-file .env -f docker-compose.yml -f docker-compose.public.yml up --build -d`, or the CUDA service with `docker compose --env-file .env -f docker-compose.cuda.yml -f docker-compose.public.yml up --build -d`.
-4. Caddy obtains and renews the HTTPS certificate automatically. The proxy exposes only `/v1/*`; the FastAPI docs and other paths remain closed.
-5. Enter `https://<your-domain>` and the same API token in KataGo Master.
-
-A public DNS name and a host reachable from the internet are required for this direct HTTPS setup. If you do not have either, the server can still run privately, but the phone cannot reach it over the public internet yet. Do not disable TLS or place the API token in a URL.
-
-## Temporary Cloudflare Quick Tunnel (no domain/account setup)
-
-For a short connectivity smoke test, you can use Cloudflare's temporary `trycloudflare.com` hostname. It does not require buying a domain or creating a named tunnel in the dashboard. It is temporary and is not intended as a permanent production endpoint.
-
-1. Prepare `.env` as described above, including a private, long `KATAGO_API_TOKEN`.
-2. Start the service and Quick Tunnel:
-
-```sh
-docker compose --env-file .env -f docker-compose.yml -f docker-compose.quick-tunnel.yml up --build -d
-docker compose --env-file .env -f docker-compose.yml -f docker-compose.quick-tunnel.yml logs -f cloudflared
-```
-
-3. Find the generated `https://<random-words>.trycloudflare.com` URL in the cloudflared log output. Enter that URL and the `KATAGO_API_TOKEN` in KataGo Master.
-4. The generated hostname changes when the Quick Tunnel is recreated. Stop it with:
-
-```sh
-docker compose --env-file .env -f docker-compose.yml -f docker-compose.quick-tunnel.yml down
-```
-
-Quick Tunnels do not provide a fixed hostname, uptime guarantee, or GPU compute. Keep API bearer-token authentication enabled and do not share the generated URL or API token publicly.
-
-## Cloudflare Tunnel (recommended for a home host)
-
-The optional `docker-compose.cloudflare.yml` overlay connects the private API to a Cloudflare Tunnel. It avoids opening inbound ports on the host and does not require a public IP address. Cloudflare provides HTTPS ingress; KataGo still runs on this Docker host.
-
-1. Add a tunnel in the Cloudflare dashboard: **Zero Trust → Networks → Tunnels → Create tunnel**. Choose the Docker connector and copy its tunnel token. Do not paste the token into chat or commit it to Git.
-2. In the tunnel's **Public Hostname** / published application route, add a hostname in a DNS zone managed by your Cloudflare account. Set the service type to **HTTP** and the origin to `katago-cloud:8080`. The hostname must resolve through this tunnel.
-3. Put the tunnel token in the private `.env` file as `CLOUDFLARE_TUNNEL_TOKEN=...`. Keep the existing `KATAGO_API_TOKEN` too.
-4. Start the CPU service and tunnel:
-
-```sh
-docker compose --env-file .env -f docker-compose.yml -f docker-compose.cloudflare.yml up --build -d
-docker compose --env-file .env -f docker-compose.yml -f docker-compose.cloudflare.yml logs -f cloudflared
-```
-
-5. In KataGo Master, set the cloud endpoint to `https://<your-cloudflare-hostname>` and enter the `KATAGO_API_TOKEN` as the API token.
-
-The Android client authenticates analysis requests with the KataGo bearer token. Do not rely on Cloudflare Access browser-login pages for this native API endpoint; an interactive login flow is not the same as the app's bearer-token authentication. Keep the API token long and private. You can add Cloudflare WAF/rate-limit rules as an additional layer, but do not remove API authentication.
-
-To stop the tunnel, use the same Compose files with `down`. The overlay does not enable GPU: for CUDA inference use the CUDA Compose file together with the tunnel overlay, and qualify the GPU host and model before treating it as production-ready.
+   The service binds to `127.0.0.1:8080` by default and is not remotely reachable.
+4. For a remotely accessible service, configure the included Caddy HTTPS overlay on a host/domain you control. Review firewall, authentication, request limits and host-provider terms before enabling access.
+5. In KataGo Master, enter the HTTPS endpoint and API token only after the service has passed health, readiness and analysis tests.
 
 ## API
 
-- `GET /v1/healthz`: non-sensitive liveness probe.
+- `GET /v1/healthz`: liveness probe.
 - `GET /v1/readyz`: authenticated engine/model readiness probe.
 - `POST /v1/analyze`: authenticated KataGo analysis request.
 
-Example:
+The response identifies `source: cloud`, request ID, model checksum, completed visits, elapsed time, best move and analysis details. The Android client must validate a returned move against the current board before applying it.
 
-```sh
-curl -sS http://127.0.0.1:8080/v1/analyze \
-  -H "Authorization: Bearer $KATAGO_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "request_id": "smoke-001",
-    "board_x_size": 19,
-    "board_y_size": 19,
-    "rules": "chinese",
-    "komi": 7.5,
-    "to_move": "B",
-    "moves": [],
-    "initial_stones": [],
-    "max_visits": 1200
-  }'
-```
+## Safety and reliability limits
 
-The service config reports win rates and score lead from Black's perspective. The response includes `source: cloud`, the matching request ID, model checksum, actual completed visits, elapsed time, best move and KataGo analysis details. The client must still validate the returned move against its current board before applying it.
-
-## Important limits
-
-- The Android app's Local/Cloud/Hybrid client integration is included in this feature branch. The service itself is not deployed until a host, API token and public HTTPS endpoint are configured.
-- The Compose service uses one worker to avoid concurrent writes to a single analysis process. Scaling requires a worker pool with one process per worker and bounded queueing.
-- GPU acceleration is available as a separate `Dockerfile.cuda` build. It requires a compatible NVIDIA GPU, host driver, NVIDIA Container Toolkit and runtime qualification. It is not enabled by the CPU Dockerfile. Start it with `docker compose --env-file .env -f docker-compose.cuda.yml up --build -d`.
-- Free compute hosts can suspend or enforce quotas. No always-on GPU capacity is promised.
-- Use a reverse proxy with HTTPS before remote use. The API token is a secret and must never be embedded as a shared constant in the APK.
-- Compare strength using identical model, rules, komi and search budgets; visits/second alone are not a strength measurement.
+- This repository does not provision a cloud host, GPU, domain, tunnel, API token or persistent endpoint.
+- Interactive notebook GPU quotas and sessions are not a substitute for a server deployment.
+- Keep the API token private and rotate it if it is exposed.
+- Use HTTPS for remote access; never disable TLS for convenience.
+- Keep request concurrency and visit budgets bounded.
+- Remote analysis may be unavailable. The app should continue to support local analysis without depending on a remote endpoint.
+- Compare playing strength using identical model, rules, komi and search budgets; visits/second alone is not a strength measurement.
 
 ## Tests
 
