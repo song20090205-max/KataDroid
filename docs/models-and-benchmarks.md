@@ -16,7 +16,7 @@ strength across networks. See the upstream [g170 network notes](https://katagoar
 
 The app allows switching these bundled pairs and importing optional `.kdmodel`
 packages with a matching descriptor and CPU references. Version-17 PyTorch
-transformer exports use the explicit contract described in
+transformer exports (including TF3) use the explicit contract described in
 [model conversion](model-conversion.md#optional-transformer-packages). Importing
 keeps the bundled models and default selection unchanged. Manual GPU mode uses
 FP32 and a context-owning inference thread. Auto retains NPU-then-CPU selection.
