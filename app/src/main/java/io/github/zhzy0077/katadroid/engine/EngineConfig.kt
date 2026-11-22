@@ -71,7 +71,7 @@ data class EngineConfig(
     val model: KataGoModel = KataGoModel.B6,
     val backend: EngineBackend = EngineBackend.AUTO,
     val searchThreads: Int = 1,
-    val computeMode: ComputeMode = ComputeMode.HYBRID,
+    val computeMode: ComputeMode = ComputeMode.LOCAL,
     val cloudEndpoint: String = "",
 ) {
     init { require(searchThreads in 1..4) }
