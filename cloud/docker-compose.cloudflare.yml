@@ -1,0 +1,16 @@
+# Add this file after docker-compose.yml:
+# docker compose --env-file .env -f docker-compose.yml -f docker-compose.cloudflare.yml up --build -d
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: katago-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in your environment}
+    depends_on:
+      - katago-cloud
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 64
