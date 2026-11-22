@@ -41,6 +41,27 @@ The default Compose file binds port 8080 to loopback only. To expose the API saf
 
 A public DNS name and a host reachable from the internet are required for this direct HTTPS setup. If you do not have either, the server can still run privately, but the phone cannot reach it over the public internet yet. Do not disable TLS or place the API token in a URL.
 
+## Temporary Cloudflare Quick Tunnel (no domain/account setup)
+
+For a short connectivity smoke test, you can use Cloudflare's temporary `trycloudflare.com` hostname. It does not require buying a domain or creating a named tunnel in the dashboard. It is temporary and is not intended as a permanent production endpoint.
+
+1. Prepare `.env` as described above, including a private, long `KATAGO_API_TOKEN`.
+2. Start the service and Quick Tunnel:
+
+```sh
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.quick-tunnel.yml up --build -d
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.quick-tunnel.yml logs -f cloudflared
+```
+
+3. Find the generated `https://<random-words>.trycloudflare.com` URL in the cloudflared log output. Enter that URL and the `KATAGO_API_TOKEN` in KataGo Master.
+4. The generated hostname changes when the Quick Tunnel is recreated. Stop it with:
+
+```sh
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.quick-tunnel.yml down
+```
+
+Quick Tunnels do not provide a fixed hostname, uptime guarantee, or GPU compute. Keep API bearer-token authentication enabled and do not share the generated URL or API token publicly.
+
 ## Cloudflare Tunnel (recommended for a home host)
 
 The optional `docker-compose.cloudflare.yml` overlay connects the private API to a Cloudflare Tunnel. It avoids opening inbound ports on the host and does not require a public IP address. Cloudflare provides HTTPS ingress; KataGo still runs on this Docker host.
