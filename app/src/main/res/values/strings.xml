@@ -293,7 +293,7 @@
     <string name="cloud_token">Cloud API token</string>
     <string name="cloud_token_saved">Token encrypted with Android Keystore and saved.</string>
     <string name="cloud_token_missing">Cloud API token is not configured.</string>
-    <string name="cloud_model_note">Cloud mode uses the model configured on the server. The phone model is used only for Local mode and Hybrid fallback.</string>
+    <string name="cloud_model_note">Cloud-first Hybrid uses the server-side TF3 model first, then the imported phone model only if cloud analysis fails. Local TF3 import requires a .kdmodel package.</string>
     <string name="cloud_save">Save cloud settings</string>
     <string name="cloud_clear_token">Clear token</string>
     <string name="cloud_https_hint">Remote connections require HTTPS. Enter the server base URL without /v1/analyze.</string>
