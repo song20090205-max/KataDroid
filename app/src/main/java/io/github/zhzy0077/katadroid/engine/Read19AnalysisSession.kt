@@ -13,7 +13,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.atomic.AtomicBoolean
-import javax.net.ssl.SSLException
 
 /**
  * Read19 cloud adapter.
@@ -108,7 +107,8 @@ class Read19AnalysisSession(
                         completed.countDown()
                         return
                     }
-                    if (!message.optBoolean("isDuringSearch", false)) {
+                    // Ignore standalone KataGo warnings; only a final rootInfo response completes the query.
+                    if (message.has("rootInfo") && !message.optBoolean("isDuringSearch", false)) {
                         finalResponse.set(message)
                         completed.countDown()
                     }
