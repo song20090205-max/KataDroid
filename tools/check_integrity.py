@@ -18,10 +18,10 @@ def main():
     local_patches = manifest.get("local_patches", {})
     for name, expected in manifest["sha256"].items():
         actual = sha256(upstream / name)
-        patched = local_patches.get(name.removeprefix("cpp/"))
+        patched = local_patches.get(name)
         if actual != expected and actual != patched:
             raise SystemExit(f"Upstream file mismatch: {name}")
-    unknown_patches = set(local_patches) - {name.removeprefix("cpp/") for name in manifest["sha256"]}
+    unknown_patches = set(local_patches) - set(manifest["sha256"])
     if unknown_patches:
         raise SystemExit(f"Patch entries are not pinned upstream files: {sorted(unknown_patches)}")
     assets = ROOT / "app/src/main/assets/katago"
