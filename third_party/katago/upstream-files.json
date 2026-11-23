@@ -1,9 +1,9 @@
 {
   "commit": "fd0723fdbc0e9d82cf269c9630af8c27c57c07c4",
   "local_patches": {
-    "cpp/core/rand.cpp": "19197492d4a259babbebb09e598cb752e2b6484d04420bd72725f796e3bf32eb",
-    "cpp/core/rand.h": "ddee319d6426a8bdbaa75eb752c5ce4277cd96b056c45a4fc320e9a69ce762ce",
-    "cpp/neuralnet/desc.cpp": "77731df5decf933baa04d982e288c36e5a9404d993b260920d4030677e34d391"
+    "cpp/core/rand.cpp": "0a3981a8e77e98934568de44da3a77cd413e1399c3b04680fa9b9e52e22ab24f",
+    "cpp/core/rand.h": "57bee4dfdf059b2bebfb0a2f64cf67a863b19ea64975f3c348fea1bc52523d22",
+    "cpp/neuralnet/desc.cpp": "4a56031d7c0ff1869db696108bdd60cbf9cec63c5b7a645d755887aafde507aa"
   },
   "sha256": {
     "CONTRIBUTORS": "6c6d353f188e27a511e269cdc7adc6ebf495ed6c215e89a95dada0a51effe5ee",
