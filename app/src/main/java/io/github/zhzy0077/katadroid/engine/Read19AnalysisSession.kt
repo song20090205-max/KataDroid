@@ -100,10 +100,20 @@ class Read19AnalysisSession(
             override fun onMessage(webSocket: WebSocket, text: String) {
                 try {
                     val message = JSONObject(text)
-                    if (message.optString("id") != requestId) return
+                    val responseId = message.optString("id")
                     val errorText = message.optString("error")
-                    if (errorText.isNotBlank() && errorText != "null") {
-                        failure.compareAndSet(null, IllegalStateException("Read19: $errorText"))
+                    // Some gateway/protocol errors are connection-wide and omit the query id.
+                    // Do not silently ignore them: that would leave the UI waiting for a final frame.
+                    if (errorText.isNotBlank() && errorText != "null" &&
+                        (responseId.isBlank() || responseId == requestId)) {
+                        failure.compareAndSet(null, IllegalStateException("Read19: ${errorText.take(240)}"))
+                        completed.countDown()
+                        return
+                    }
+                    if (responseId != requestId) return
+                    // A terminated/empty query can finish without rootInfo; surface it instead of waiting forever.
+                    if (!message.optBoolean("isDuringSearch", true) && message.optBoolean("noResults", false)) {
+                        failure.compareAndSet(null, IllegalStateException("Read19 finished the query without analysis results"))
                         completed.countDown()
                         return
                     }
