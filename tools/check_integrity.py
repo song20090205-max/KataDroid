@@ -15,9 +15,15 @@ def sha256(path):
 def main():
     upstream = ROOT / "third_party/katago"
     manifest = json.loads((upstream / "upstream-files.json").read_text())
+    local_patches = manifest.get("local_patches", {})
     for name, expected in manifest["sha256"].items():
-        if sha256(upstream / name) != expected:
+        actual = sha256(upstream / name)
+        patched = local_patches.get(name.removeprefix("cpp/"))
+        if actual != expected and actual != patched:
             raise SystemExit(f"Upstream file mismatch: {name}")
+    unknown_patches = set(local_patches) - {name.removeprefix("cpp/") for name in manifest["sha256"]}
+    if unknown_patches:
+        raise SystemExit(f"Patch entries are not pinned upstream files: {sorted(unknown_patches)}")
     assets = ROOT / "app/src/main/assets/katago"
     catalog = (ROOT / "app/src/main/java/io/github/zhzy0077/katadroid/engine/EngineConfig.kt").read_text()
     for model, fixture in (("b6c96", "fixtures.json"), ("b10c128", "b10c128-fixtures.json")):
