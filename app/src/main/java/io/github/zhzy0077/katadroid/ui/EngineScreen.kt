@@ -64,6 +64,7 @@ fun EngineScreen(
             try {
                 val imported = checkNotNull(context.contentResolver.openInputStream(uri)).use { ModelPackages.install(context, it) }
                 catalogRevision++
+                onConfig(config.copy(model = imported))
                 importStatus = resources.getString(R.string.model_import_complete, imported.sourceName)
             } catch (error: CancellationException) { throw error }
             catch (error: Exception) { importStatus = resources.getString(R.string.model_import_failed) }
